@@ -212,10 +212,23 @@ export default async function DetailAnggotaPage({ params }: PageProps) {
               </div>
 
               <div className="pt-4 border-t border-border">
-                <p className="text-xs text-text-secondary mb-1">RFID UID</p>
+                <p className="text-xs text-text-secondary mb-1">RFID UID (KTP)</p>
                 <p className="text-sm font-mono font-medium text-text-primary">
                   {member.ktpRecord.rfidUid}
                 </p>
+              </div>
+
+              <div className="pt-4 border-t border-border">
+                <p className="text-xs text-text-secondary mb-1">UID Kartu Kopdes</p>
+                {member.kopdesCardUid ? (
+                  <p className="text-sm font-mono font-medium text-text-primary">
+                    {member.kopdesCardUid}
+                  </p>
+                ) : (
+                  <p className="text-sm text-text-secondary italic">
+                    Belum ditautkan — edit anggota untuk menautkan kartu
+                  </p>
+                )}
               </div>
             </div>
           </div>

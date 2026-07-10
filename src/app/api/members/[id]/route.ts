@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
 
@@ -83,6 +84,7 @@ export async function PUT(
     const status = str(body.status);
     const foto = typeof body.foto === 'string' ? body.foto : undefined;
     const tanggalDaftarRaw = str(body.tanggalDaftar);
+    const kopdesCardUid = str(body.kopdesCardUid);
 
     if (!nama || !phone || !status) {
       return NextResponse.json(
@@ -179,13 +181,23 @@ export async function PUT(
           status,
           ...(foto && { foto }),
           ...(tanggalDaftar && { tanggalDaftar }),
+          ...(kopdesCardUid && { kopdesCardUid }),
         },
         include: { ktpRecord: true },
       });
     });
 
     return NextResponse.json({ member });
-  } catch {
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'UID kartu Kopdes ini sudah terpasang ke anggota lain' },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { error: 'Terjadi kesalahan pada server' },
       { status: 500 }

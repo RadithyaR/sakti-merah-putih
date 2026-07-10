@@ -32,6 +32,7 @@ export default async function EditAnggotaPage({ params }: PageProps) {
       email: true,
       status: true,
       tanggalDaftar: true,
+      kopdesCardUid: true,
       ktpRecord: {
         select: {
           tempatLahir: true,
@@ -65,6 +66,7 @@ export default async function EditAnggotaPage({ params }: PageProps) {
     email: member.email,
     status: member.status,
     tanggalDaftar: member.tanggalDaftar.toISOString(),
+    kopdesCardUid: member.kopdesCardUid,
     ktpRecord: {
       ...member.ktpRecord,
       tanggalLahir: member.ktpRecord.tanggalLahir.toISOString(),

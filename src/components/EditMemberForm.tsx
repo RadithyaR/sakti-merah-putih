@@ -15,6 +15,7 @@ interface EditMemberFormProps {
     email: string | null
     status: string
     tanggalDaftar: string
+    kopdesCardUid: string | null
     ktpRecord: {
       tempatLahir: string
       tanggalLahir: string
@@ -46,6 +47,7 @@ export default function EditMemberForm({ member }: EditMemberFormProps) {
   const [tanggalDaftar, setTanggalDaftar] = useState(toDateInput(member.tanggalDaftar))
   const [foto, setFoto] = useState(member.foto)
   const [showCamera, setShowCamera] = useState(false)
+  const [kopdesCardUid, setKopdesCardUid] = useState(member.kopdesCardUid ?? '')
 
   // Data kependudukan (KTP)
   const k = member.ktpRecord
@@ -85,6 +87,7 @@ export default function EditMemberForm({ member }: EditMemberFormProps) {
           status,
           foto,
           tanggalDaftar,
+          kopdesCardUid,
           tempatLahir,
           tanggalLahir,
           jenisKelamin,
@@ -222,6 +225,20 @@ export default function EditMemberForm({ member }: EditMemberFormProps) {
             />
             <p className="text-xs text-text-secondary mt-1">
               Berpengaruh pada kewajiban dan hak simpanan anggota. Pastikan tanggal benar.
+            </p>
+          </div>
+
+          <div>
+            <label className={labelClass}>UID Kartu Kopdes</label>
+            <input
+              type="text"
+              value={kopdesCardUid}
+              onChange={(e) => setKopdesCardUid(e.target.value)}
+              placeholder="Belum ditautkan"
+              className={`${inputClass} font-mono`}
+            />
+            <p className="text-xs text-text-secondary mt-1">
+              Tautkan atau ganti kartu Kopdes fisik anggota (mis. kartu hilang/rusak).
             </p>
           </div>
         </div>

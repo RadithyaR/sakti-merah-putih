@@ -7,6 +7,7 @@ Sistem pendaftaran anggota koperasi berbasis web dengan integrasi RFID reader da
 - **RFID Scanner** - Tap kartu RFID untuk membaca data KTP warga secara otomatis
 - **Database Kependudukan** - Data KTP tersimpan di database PostgreSQL, terintegrasi dengan RFID UID
 - **Foto Digital** - Ambil foto anggota langsung dari webcam terintegrasi
+- **Kartu Kopdes** - Tautkan UID kartu anggota Kopdes fisik pasca-pendaftaran, dipakai untuk verifikasi anggota ke depannya (menggantikan scan KTP berulang)
 - **Multi-Tenant** - Setiap koperasi memiliki akun admin dan data anggota terpisah
 - **Dashboard** - Statistik dan ringkasan data anggota per koperasi
 - **Manajemen Anggota** - Daftar, cari, filter, lihat detail, **edit**, dan **hapus** data anggota
@@ -41,6 +42,7 @@ Browser
         |-- /api/auth/*       - Autentikasi (login, me)
         |-- /api/members/*    - CRUD anggota (GET/PUT/DELETE per-anggota)
         |-- /api/members/[id]/card - Generate PDF kartu anggota (CR80)
+        |-- /api/members/[id]/card-uid - Tautkan UID kartu Kopdes fisik
         |-- /api/ktp/lookup   - Lookup KTP by RFID UID
         |-- /api/rfid/scan    - Simulasi scan RFID
         |
@@ -79,12 +81,14 @@ koperasi-merah-putih/
 │   │   └── api/               # API Routes
 │   │       ├── auth/          # Login & me
 │   │       ├── members/       # CRUD anggota
-│   │       │   └── [id]/card/ # Generate PDF kartu anggota
+│   │       │   ├── [id]/card/     # Generate PDF kartu anggota
+│   │       │   └── [id]/card-uid/ # Tautkan UID kartu Kopdes fisik
 │   │       ├── ktp/           # Lookup KTP
 │   │       └── rfid/          # Simulasi RFID
 │   ├── components/
 │   │   ├── Layout/            # Sidebar, Navbar
-│   │   ├── RfidScanner.tsx    # Komponen RFID scanner
+│   │   ├── RfidScanner.tsx    # Komponen RFID scanner (KTP)
+│   │   ├── KopdesCardScanner.tsx # Komponen scan/tautkan UID kartu Kopdes
 │   │   ├── KtpCard.tsx        # Card data KTP
 │   │   ├── WebcamCapture.tsx  # Komponen webcam
 │   │   ├── SearchFilter.tsx   # Search & filter
@@ -163,21 +167,22 @@ Setelah seed, tersedia 3 akun admin untuk 3 koperasi berbeda:
 
 ### 1. Pendaftaran Anggota Baru
 
-1. Login sebagai admin koperasi
-2. Buka menu **Pendaftaran Anggota**
-3. Tap kartu RFID ke reader, atau klik **Simulasi** untuk demo
-4. Data KTP otomatis tampil dari database kependudukan
-5. Ambil foto anggota via webcam
-6. Isi nomor telepon dan email (opsional)
-7. Klik **Daftarkan Anggota**
-8. Nomor anggota otomatis digenerate (format: `KPR-YYYYMMDD-XXX`)
+Alur pendaftaran terdiri dari 4 langkah:
+
+1. **Scan RFID** — Login sebagai admin koperasi, buka menu **Pendaftaran Anggota**, lalu tap kartu RFID KTP ke reader (atau klik **Simulasi** untuk demo). Data KTP otomatis tampil dari database kependudukan.
+2. **Data & Foto** — Ambil foto anggota via webcam, isi nomor telepon dan email (opsional), lalu klik **Daftarkan Anggota**. Nomor anggota otomatis digenerate (format: `KODE-YYYYMMDD-XXXX`).
+3. **Kartu Kopdes** — Tap kartu anggota Kopdes fisik (bukan KTP) ke reader untuk menautkan UID-nya ke anggota yang baru dibuat, atau klik **Lewati untuk Saat Ini** jika kartu fisik belum tersedia. Kartu ini yang dipakai untuk verifikasi anggota ke depannya — menggantikan scan KTP setelah pendaftaran awal.
+4. **Selesai** — Ringkasan nomor anggota (dan UID kartu Kopdes jika ditautkan), plus tombol cetak/unduh kartu.
+
+Kalau langkah 3 dilewati saat pendaftaran, UID kartu Kopdes bisa ditautkan belakangan lewat halaman **Edit Anggota** (field "UID Kartu Kopdes") — juga berguna untuk mengganti kartu yang hilang/rusak.
 
 ### 2. RFID Reader
 
-Aplikasi mendukung RFID reader USB dengan mode **HID Keyboard Emulation**:
-- UID kartu otomatis terketik ke input field
-- Tekan **Enter** untuk trigger lookup
-- Input field auto-focus untuk menerima input dari reader
+Aplikasi mendukung RFID reader USB dengan mode **HID Keyboard Emulation**, dipakai di dua tempat berbeda:
+- **Scan KTP** (langkah 1 pendaftaran) — lookup ke database kependudukan via `/api/ktp/lookup`
+- **Scan Kartu Kopdes** (langkah 3 pendaftaran, atau dari halaman edit) — hanya menautkan UID mentah ke anggota, tanpa lookup
+
+Untuk keduanya: UID kartu otomatis terketik ke input field yang auto-focus, tekan **Enter** untuk konfirmasi.
 
 ### 3. Multi-Tenant
 
