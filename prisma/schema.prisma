@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Koperasi {
+  id        Int      @id @default(autoincrement())
+  nama      String
+  alamat    String?
+  kode      String   @unique
+  createdAt DateTime @default(now())
+  
+  users     User[]
+  members   Member[]
+}
+
+model KtpRecord {
+  id                Int      @id @default(autoincrement())
+  nik               String   @unique
+  nama              String
+  tempatLahir       String
+  tanggalLahir      DateTime
+  jenisKelamin      String
+  alamat            String
+  rtRw              String
+  kelurahan         String
+  kecamatan         String
+  kabupaten         String
+  provinsi          String
+  agama             String
+  statusPerkawinan  String
+  pekerjaan         String
+  rfidUid           String   @unique
+
+  member            Member?
+}
+
+model Member {
+  id                Int      @id @default(autoincrement())
+  memberId          String   @unique
+  nik               String   @unique
+  nama              String
+  foto              String
+  phone             String
+  email             String?
+  tanggalDaftar     DateTime @default(now())
+  status            String   @default("Aktif")
+  koperasiId        Int
+
+  ktpRecord         KtpRecord @relation(fields: [nik], references: [nik])
+  koperasi          Koperasi  @relation(fields: [koperasiId], references: [id])
+}
+
+model User {
+  id                Int      @id @default(autoincrement())
+  username          String   @unique
+  password          String
+  nama              String
+  role              String   @default("Petugas")
+  koperasiId        Int
+  createdAt         DateTime @default(now())
+
+  koperasi          Koperasi @relation(fields: [koperasiId], references: [id])
+}
