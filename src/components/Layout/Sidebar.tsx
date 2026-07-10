@@ -26,7 +26,7 @@ export default function Sidebar() {
     <aside className="w-64 bg-white border-r border-border min-h-screen flex flex-col">
       {/* Logo */}
       <div className="p-6 border-b border-border">
-        <div className="flex items-center justify-center">
+        <Link href="/" className="flex items-center justify-center">
           <div className="w-160 h-20 rounded-lg overflow-hidden flex items-center justify-center">
             <Image
               src="/logo.png"
@@ -36,7 +36,7 @@ export default function Sidebar() {
               className="object-contain"
             />
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Menu */}

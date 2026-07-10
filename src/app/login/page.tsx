@@ -44,11 +44,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-surface to-white p-6">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-surface to-white p-6">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-2">
-          <div className="inline-flex items-center gap-3 mb-4">
+          <Link href="/" className="inline-flex items-center gap-3 mb-4">
             <div className="w-80 h-32 rounded-lg overflow-hidden flex items-center justify-center">
               <Image
                 src="/logo.png"
@@ -58,7 +58,7 @@ export default function LoginPage() {
                 className="object-contain"
               />
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Login Form */}
@@ -117,18 +117,6 @@ export default function LoginPage() {
               {loading ? "Memproses..." : "Masuk"}
             </button>
           </form>
-
-          <div className="mt-6 p-4 bg-surface rounded-lg">
-            <p className="text-xs text-text-secondary mb-2">
-              Demo credentials:
-            </p>
-            <p className="text-sm text-text-primary font-mono">
-              Username: admin
-            </p>
-            <p className="text-sm text-text-primary font-mono">
-              Password: admin123
-            </p>
-          </div>
         </div>
 
         {/* Back to home */}
