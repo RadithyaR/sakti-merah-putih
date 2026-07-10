@@ -1,8 +1,9 @@
 import { prisma } from '@/lib/prisma'
-import { ArrowLeft, User, MapPin, Briefcase, Phone, Mail, Calendar, CreditCard } from 'lucide-react'
+import { ArrowLeft, User, MapPin, Briefcase, Phone, Mail, Calendar, CreditCard, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { getKoperasiId } from '@/lib/auth'
+import DeleteMemberButton from '@/components/DeleteMemberButton'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -54,13 +55,22 @@ export default async function DetailAnggotaPage({ params }: PageProps) {
             <p className="text-text-secondary mt-1">Informasi lengkap anggota koperasi</p>
           </div>
         </div>
-        <Link
-          href={`/anggota/${member.id}/kartu`}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity font-semibold"
-        >
-          <CreditCard className="w-5 h-5" />
-          Cetak Kartu
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/anggota/${member.id}/edit`}
+            className="flex items-center gap-2 px-4 py-2 border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors font-semibold"
+          >
+            <Pencil className="w-5 h-5" />
+            Edit
+          </Link>
+          <Link
+            href={`/anggota/${member.id}/kartu`}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity font-semibold"
+          >
+            <CreditCard className="w-5 h-5" />
+            Cetak Kartu
+          </Link>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -218,6 +228,11 @@ export default async function DetailAnggotaPage({ params }: PageProps) {
               <ArrowLeft className="w-5 h-5" />
               Kembali ke Daftar
             </Link>
+            <DeleteMemberButton
+              memberId={member.id}
+              memberName={member.nama}
+              redirectAfter="/anggota"
+            />
           </div>
         </div>
       </div>
