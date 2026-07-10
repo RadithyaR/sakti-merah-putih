@@ -41,17 +41,26 @@ export default async function DetailAnggotaPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link
-          href="/anggota"
-          className="p-2 hover:bg-surface rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-6 h-6 text-text-primary" />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-text-primary">Detail Anggota</h1>
-          <p className="text-text-secondary mt-1">Informasi lengkap anggota koperasi</p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/anggota"
+            className="p-2 hover:bg-surface rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-6 h-6 text-text-primary" />
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-text-primary">Detail Anggota</h1>
+            <p className="text-text-secondary mt-1">Informasi lengkap anggota koperasi</p>
+          </div>
         </div>
+        <Link
+          href={`/anggota/${member.id}/kartu`}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity font-semibold"
+        >
+          <CreditCard className="w-5 h-5" />
+          Cetak Kartu
+        </Link>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">

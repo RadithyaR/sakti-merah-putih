@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserPlus, CheckCircle, AlertCircle } from "lucide-react";
+import { UserPlus, CheckCircle, AlertCircle, CreditCard, FileDown } from "lucide-react";
 import RfidScanner from "@/components/RfidScanner";
 import KtpCard from "@/components/KtpCard";
 import WebcamCapture from "@/components/WebcamCapture";
@@ -36,6 +36,7 @@ export default function PendaftaranPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [memberId, setMemberId] = useState("");
+  const [newMemberDbId, setNewMemberDbId] = useState<number | null>(null);
 
   const handleKtpFound = (ktp: KtpData) => {
     setKtpData(ktp);
@@ -104,6 +105,7 @@ export default function PendaftaranPage() {
       }
 
       setMemberId(data.member.memberId);
+      setNewMemberDbId(data.member.id);
       setSuccess(true);
       setStep(3);
     } catch (err) {
@@ -122,6 +124,7 @@ export default function PendaftaranPage() {
     setError("");
     setSuccess(false);
     setMemberId("");
+    setNewMemberDbId(null);
   };
 
   return (
@@ -319,7 +322,25 @@ export default function PendaftaranPage() {
               {memberId}
             </p>
           </div>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-wrap gap-4 justify-center">
+            {newMemberDbId && (
+              <>
+                <button
+                  onClick={() => router.push(`/anggota/${newMemberDbId}/kartu`)}
+                  className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold"
+                >
+                  <CreditCard className="w-5 h-5" />
+                  Cetak Kartu Anggota
+                </button>
+                <a
+                  href={`/api/members/${newMemberDbId}/card`}
+                  className="flex items-center gap-2 px-6 py-3 border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors font-semibold"
+                >
+                  <FileDown className="w-5 h-5" />
+                  Download PDF Kartu
+                </a>
+              </>
+            )}
             <button
               onClick={handleReset}
               className="px-6 py-3 border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors font-semibold"
@@ -328,7 +349,7 @@ export default function PendaftaranPage() {
             </button>
             <button
               onClick={() => router.push("/anggota")}
-              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold"
+              className="px-6 py-3 border-2 border-border text-text-primary rounded-lg hover:bg-surface transition-colors font-semibold"
             >
               Lihat Daftar Anggota
             </button>

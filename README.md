@@ -10,6 +10,7 @@ Sistem pendaftaran anggota koperasi berbasis web dengan integrasi RFID reader da
 - **Multi-Tenant** - Setiap koperasi memiliki akun admin dan data anggota terpisah
 - **Dashboard** - Statistik dan ringkasan data anggota per koperasi
 - **Manajemen Anggota** - Daftar, cari, filter, dan lihat detail anggota
+- **Kartu Anggota (Print-Ready)** - Cetak kartu fisik ukuran CR80 (54 × 85.6 mm) langsung dari browser atau unduh sebagai PDF siap cetak
 
 ## 🛠️ Tech Stack
 
@@ -39,6 +40,7 @@ Browser
   +-- API Routes
         |-- /api/auth/*       - Autentikasi (login, me)
         |-- /api/members/*    - CRUD anggota
+        |-- /api/members/[id]/card - Generate PDF kartu anggota (CR80)
         |-- /api/ktp/lookup   - Lookup KTP by RFID UID
         |-- /api/rfid/scan    - Simulasi scan RFID
         |
@@ -59,6 +61,7 @@ koperasi-merah-putih/
 │   └── migrations/            # Database migrations
 ├── public/
 │   ├── photos/                # Foto anggota (dari webcam)
+│   ├── card/                  # Assets templat kartu anggota (logo, back, ribbon)
 │   └── logo.png               # Logo aplikasi
 ├── src/
 │   ├── app/
@@ -70,10 +73,12 @@ koperasi-merah-putih/
 │   │   │   ├── layout.tsx     # Sidebar + Navbar
 │   │   │   ├── dashboard/     # Halaman dashboard
 │   │   │   ├── pendaftaran/   # Pendaftaran anggota (RFID + foto)
-│   │   │   └── anggota/       # Daftar & detail anggota
+│   │   │   └── anggota/       # Daftar, detail & kartu anggota
+│   │   │       └── [id]/kartu/ # Halaman preview + cetak kartu anggota
 │   │   └── api/               # API Routes
 │   │       ├── auth/          # Login & me
 │   │       ├── members/       # CRUD anggota
+│   │       │   └── [id]/card/ # Generate PDF kartu anggota
 │   │       ├── ktp/           # Lookup KTP
 │   │       └── rfid/          # Simulasi RFID
 │   ├── components/
@@ -82,7 +87,9 @@ koperasi-merah-putih/
 │   │   ├── KtpCard.tsx        # Card data KTP
 │   │   ├── WebcamCapture.tsx  # Komponen webcam
 │   │   ├── SearchFilter.tsx   # Search & filter
-│   │   └── Pagination.tsx     # Pagination
+│   │   ├── Pagination.tsx     # Pagination
+│   │   ├── MemberCard.tsx     # Kartu anggota depan/belakang (CR80)
+│   │   └── CardPrintActions.tsx # Tombol Cetak & Download PDF
 │   └── lib/
 │       ├── prisma.ts          # Prisma Client singleton
 │       ├── auth.ts            # JWT & bcrypt helpers
@@ -175,6 +182,15 @@ Aplikasi mendukung RFID reader USB dengan mode **HID Keyboard Emulation**:
 - Anggota yang sudah terdaftar di satu koperasi **tidak bisa** mendaftar di koperasi lain
 - Dashboard hanya menampilkan statistik koperasi masing-masing
 
+### 4. Cetak Kartu Anggota
+
+Kartu fisik ukuran standar **CR80 (54 × 85.6 mm)**, tersedia dari halaman sukses pendaftaran atau halaman detail anggota:
+
+1. Klik **Cetak Kartu Anggota** (setelah pendaftaran) atau **Cetak Kartu** (di halaman detail anggota)
+2. Halaman `/anggota/[id]/kartu` menampilkan preview kartu depan (logo, nama koperasi, nama & NIK anggota) dan kartu belakang (templat KDMP Card)
+3. **Cetak langsung**: tombol **Cetak Kartu** memakai `window.print()` dengan CSS `@media print` presisi mm — pastikan opsi *Background graphics* aktif dan skala **100%**
+4. **Download PDF**: tombol **Download PDF** memanggil `/api/members/[id]/card`, menghasilkan PDF A4 berisi kartu depan + belakang berdampingan lengkap dengan crop mark, siap untuk dipotong dan dilaminasi
+
 ## 🗄️ Database
 
 ### Melihat Database via Prisma Studio
@@ -220,6 +236,8 @@ User (Admin/Petugas)
 ├── koperasiId → Koperasi (relasi)
 └── createdAt
 ```
+
+> Skema Prisma di atas adalah skema **aplikasi ini** (disederhanakan untuk alur pendaftaran anggota). Panitia hackathon juga menyediakan dataset skala penuh terpisah (27 tabel: transaksi, produk, aset, modal, dst.) yang telah dimigrasikan ke Cloud SQL milik tim — lihat [`docs/HACKATHON_DATABASE_SCHEMA.md`](docs/HACKATHON_DATABASE_SCHEMA.md) untuk skema lengkap, relasi antar tabel, dan detail migrasinya.
 
 ## 🎫 RFID UID Kartu Fisik
 
