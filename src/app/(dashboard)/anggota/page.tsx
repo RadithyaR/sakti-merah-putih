@@ -1,8 +1,9 @@
 import { prisma } from '@/lib/prisma'
-import { Users, Eye } from 'lucide-react'
+import { Users, Eye, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import SearchFilter from '@/components/SearchFilter'
 import Pagination from '@/components/Pagination'
+import DeleteMemberButton from '@/components/DeleteMemberButton'
 import { getKoperasiId } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
@@ -25,7 +26,7 @@ export default async function AnggotaPage({ searchParams }: PageProps) {
   const page = parseInt((params.page as string) || '1', 10)
   const limit = 10
 
-  const where: any = { koperasiId }
+  const where: Record<string, unknown> = { koperasiId }
 
   if (search) {
     where.OR = [
@@ -166,13 +167,27 @@ export default async function AnggotaPage({ searchParams }: PageProps) {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <Link
-                          href={`/anggota/${member.id}`}
-                          className="inline-flex items-center gap-1 px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                          Detail
-                        </Link>
+                        <div className="flex items-center gap-1">
+                          <Link
+                            href={`/anggota/${member.id}`}
+                            className="inline-flex items-center gap-1 px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Detail
+                          </Link>
+                          <Link
+                            href={`/anggota/${member.id}/edit`}
+                            className="inline-flex items-center gap-1 px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Edit
+                          </Link>
+                          <DeleteMemberButton
+                            memberId={member.id}
+                            memberName={member.nama}
+                            variant="row"
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}

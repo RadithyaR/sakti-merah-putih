@@ -9,7 +9,7 @@ Sistem pendaftaran anggota koperasi berbasis web dengan integrasi RFID reader da
 - **Foto Digital** - Ambil foto anggota langsung dari webcam terintegrasi
 - **Multi-Tenant** - Setiap koperasi memiliki akun admin dan data anggota terpisah
 - **Dashboard** - Statistik dan ringkasan data anggota per koperasi
-- **Manajemen Anggota** - Daftar, cari, filter, dan lihat detail anggota
+- **Manajemen Anggota** - Daftar, cari, filter, lihat detail, **edit**, dan **hapus** data anggota
 - **Kartu Anggota (Print-Ready)** - Cetak kartu fisik ukuran CR80 (54 × 85.6 mm) langsung dari browser atau unduh sebagai PDF siap cetak
 
 ## 🛠️ Tech Stack
@@ -39,7 +39,7 @@ Browser
   |
   +-- API Routes
         |-- /api/auth/*       - Autentikasi (login, me)
-        |-- /api/members/*    - CRUD anggota
+        |-- /api/members/*    - CRUD anggota (GET/PUT/DELETE per-anggota)
         |-- /api/members/[id]/card - Generate PDF kartu anggota (CR80)
         |-- /api/ktp/lookup   - Lookup KTP by RFID UID
         |-- /api/rfid/scan    - Simulasi scan RFID
@@ -73,7 +73,8 @@ koperasi-merah-putih/
 │   │   │   ├── layout.tsx     # Sidebar + Navbar
 │   │   │   ├── dashboard/     # Halaman dashboard
 │   │   │   ├── pendaftaran/   # Pendaftaran anggota (RFID + foto)
-│   │   │   └── anggota/       # Daftar, detail & kartu anggota
+│   │   │   └── anggota/       # Daftar, detail, edit & kartu anggota
+│   │   │       ├── [id]/edit/  # Form edit data anggota
 │   │   │       └── [id]/kartu/ # Halaman preview + cetak kartu anggota
 │   │   └── api/               # API Routes
 │   │       ├── auth/          # Login & me
@@ -89,7 +90,9 @@ koperasi-merah-putih/
 │   │   ├── SearchFilter.tsx   # Search & filter
 │   │   ├── Pagination.tsx     # Pagination
 │   │   ├── MemberCard.tsx     # Kartu anggota depan/belakang (CR80)
-│   │   └── CardPrintActions.tsx # Tombol Cetak & Download PDF
+│   │   ├── CardPrintActions.tsx # Tombol Cetak & Download PDF
+│   │   ├── EditMemberForm.tsx # Form edit data anggota
+│   │   └── DeleteMemberButton.tsx # Tombol hapus anggota + konfirmasi
 │   └── lib/
 │       ├── prisma.ts          # Prisma Client singleton
 │       ├── auth.ts            # JWT & bcrypt helpers
@@ -190,6 +193,14 @@ Kartu fisik ukuran standar **CR80 (54 × 85.6 mm)**, tersedia dari halaman sukse
 2. Halaman `/anggota/[id]/kartu` menampilkan preview kartu depan (logo, nama koperasi, nama & NIK anggota) dan kartu belakang (templat KDMP Card)
 3. **Cetak langsung**: tombol **Cetak Kartu** memakai `window.print()` dengan CSS `@media print` presisi mm — pastikan opsi *Background graphics* aktif dan skala **100%**
 4. **Download PDF**: tombol **Download PDF** memanggil `/api/members/[id]/card`, menghasilkan PDF A4 berisi kartu depan + belakang berdampingan lengkap dengan crop mark, siap untuk dipotong dan dilaminasi
+
+### 5. Edit & Hapus Anggota
+
+Admin dapat mengubah atau menghapus data anggota dari halaman **Daftar Anggota** (kolom Aksi) atau halaman **Detail Anggota**:
+
+- **Edit** (`/anggota/[id]/edit`) - ubah nama, nomor telepon, email, dan status (Aktif/Tidak Aktif). NIK dan data KTP tidak bisa diubah dari sini karena terhubung langsung ke database kependudukan.
+- **Hapus** - meminta konfirmasi sebelum menghapus permanen. Hanya menghapus record `Member`; data KTP kependudukan (`KtpRecord`) tetap tersimpan untuk digunakan jika warga yang sama mendaftar kembali.
+- Kedua aksi di-scope ke `koperasiId` admin yang login - admin koperasi lain tidak bisa mengedit/menghapus anggota koperasi lain meski menebak ID-nya.
 
 ## 🗄️ Database
 
