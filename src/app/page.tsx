@@ -1,21 +1,22 @@
 import Link from "next/link";
-import { Shield, Wifi, Camera, Users } from "lucide-react";
+import Image from "next/image";
+import { Wifi, Camera, Users } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface to-white">
+    <div className="min-h-screen bg-linear-to-br from-surface to-white">
       {/* Header */}
       <header className="container mx-auto px-6 py-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-              <Shield className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-primary">SAKTI</h1>
-              <p className="text-xs text-text-secondary">
-                Koperasi Desa Merah Putih
-              </p>
+            <div className="w-80 h-20 rounded-lg overflow-hidden flex items-center justify-center">
+              <Image
+                src="/logo.png"
+                alt="SAKTI Logo"
+                width={160}
+                height={160}
+                className="object-contain"
+              />
             </div>
           </div>
           <Link

@@ -2,7 +2,7 @@
 
 Sistem pendaftaran anggota koperasi berbasis web dengan integrasi RFID reader dan database kependudukan. Dibuat untuk **Hackathon Koperasi Desa Merah Putih**.
 
-## Fitur Utama
+## 🎯 Fitur Utama
 
 - **RFID Scanner** - Tap kartu RFID untuk membaca data KTP warga secara otomatis
 - **Database Kependudukan** - Data KTP tersimpan di database PostgreSQL, terintegrasi dengan RFID UID
@@ -11,7 +11,7 @@ Sistem pendaftaran anggota koperasi berbasis web dengan integrasi RFID reader da
 - **Dashboard** - Statistik dan ringkasan data anggota per koperasi
 - **Manajemen Anggota** - Daftar, cari, filter, dan lihat detail anggota
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 | Kategori | Teknologi |
 |----------|-----------|
@@ -21,7 +21,7 @@ Sistem pendaftaran anggota koperasi berbasis web dengan integrasi RFID reader da
 | Auth | JWT (jsonwebtoken) + bcryptjs |
 | Icons | Lucide React |
 
-## Arsitektur
+## 🏗️ Arsitektur
 
 ```
 Browser
@@ -49,7 +49,7 @@ Browser
               |-- Member      - Anggota koperasi (per koperasi)
 ```
 
-## Struktur Folder
+## 📁 Struktur Folder
 
 ```
 koperasi-merah-putih/
@@ -58,7 +58,8 @@ koperasi-merah-putih/
 │   ├── seed.js                # Seed data (koperasi, admin, KTP)
 │   └── migrations/            # Database migrations
 ├── public/
-│   └── photos/                # Foto anggota (dari webcam)
+│   ├── photos/                # Foto anggota (dari webcam)
+│   └── logo.png               # Logo aplikasi
 ├── src/
 │   ├── app/
 │   │   ├── globals.css        # Design system (tema merah-putih)
@@ -90,13 +91,13 @@ koperasi-merah-putih/
 └── package.json
 ```
 
-## Prasyarat
+## 📋 Prasyarat
 
 - **Node.js** v18+
 - **PostgreSQL** v14+
 - **npm** v9+
 
-## Instalasi
+## 🚀 Instalasi
 
 ### 1. Clone dan Install Dependencies
 
@@ -138,7 +139,7 @@ npm run dev
 
 Buka browser: **http://localhost:3000**
 
-## Akun Login
+## 🔐 Akun Login
 
 Setelah seed, tersedia 3 akun admin untuk 3 koperasi berbeda:
 
@@ -148,7 +149,7 @@ Setelah seed, tersedia 3 akun admin untuk 3 koperasi berbeda:
 | `admin2` | `admin123` | Koperasi Sejahtera |
 | `admin3` | `admin123` | Koperasi Makmur |
 
-## Cara Penggunaan
+## 📖 Cara Penggunaan
 
 ### 1. Pendaftaran Anggota Baru
 
@@ -174,7 +175,7 @@ Aplikasi mendukung RFID reader USB dengan mode **HID Keyboard Emulation**:
 - Anggota yang sudah terdaftar di satu koperasi **tidak bisa** mendaftar di koperasi lain
 - Dashboard hanya menampilkan statistik koperasi masing-masing
 
-## Database
+## 🗄️ Database
 
 ### Melihat Database via Prisma Studio
 
@@ -220,7 +221,7 @@ User (Admin/Petugas)
 └── createdAt
 ```
 
-## RFID UID Kartu Fisik
+## 🎫 RFID UID Kartu Fisik
 
 Kartu RFID yang sudah terdaftar di database:
 
@@ -231,20 +232,20 @@ Kartu RFID yang sudah terdaftar di database:
 | `4167398946` | Budi Santoso |
 | `4167372726` | Dewi Lestari |
 
-## Scripts
+## 📜 Scripts
 
 ```bash
-npm run dev          # Jalankan development server
-npm run build        # Build untuk production
-npm run start        # Jalankan production server
-npm run lint         # Run ESLint
-npx prisma studio    # Buka GUI database
-npx prisma db seed   # Seed database
+npm run dev              # Jalankan development server
+npm run build            # Build untuk production
+npm run start            # Jalankan production server
+npm run lint             # Run ESLint
+npx prisma studio        # Buka GUI database
+npx prisma db seed       # Seed database
 npx prisma migrate dev   # Buat dan apply migration
 npx prisma generate      # Generate Prisma Client
 ```
 
-## Deployment
+## 🌐 Deployment
 
 ### Vercel + Supabase/Neon
 
@@ -262,6 +263,10 @@ npx prisma generate      # Generate Prisma Client
 2. Start: `npm run start`
 3. Gunakan reverse proxy (nginx) untuk HTTPS
 
-## Lisensi
+## 📝 Lisensi
 
 Dibuat untuk Hackathon Koperasi Desa Merah Putih.
+
+---
+
+**Dikembangkan dengan ❤️ untuk Koperasi Desa Merah Putih**
