@@ -94,28 +94,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate memberId: KPR-YYYYMMDD-XXX
-    const now = new Date();
-    const dateStr = now.getFullYear().toString() +
-      (now.getMonth() + 1).toString().padStart(2, '0') +
-      now.getDate().toString().padStart(2, '0');
+    // Get koperasi code
+    const koperasi = await prisma.koperasi.findUnique({
+      where: { id: koperasiId },
+      select: { kode: true }
+    });
 
-    let memberId = '';
-    let isUnique = false;
-
-    while (!isUnique) {
-      const randomDigits = Math.floor(Math.random() * 900 + 100).toString();
-      const candidateId = `KPR-${dateStr}-${randomDigits}`;
-
-      const existing = await prisma.member.findUnique({
-        where: { memberId: candidateId },
-      });
-
-      if (!existing) {
-        memberId = candidateId;
-        isUnique = true;
-      }
+    if (!koperasi) {
+      return NextResponse.json(
+        { error: 'Koperasi tidak ditemukan' },
+        { status: 404 }
+      );
     }
+
+    // Generate date string (YYYYMMDD)
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+
+    // Count members registered today for this koperasi
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const todayCount = await prisma.member.count({
+      where: {
+        koperasiId,
+        tanggalDaftar: { gte: startOfDay }
+      }
+    });
+
+    // Generate sequential number (4 digits)
+    const sequential = (todayCount + 1).toString().padStart(4, '0');
+
+    // Final memberId: KODE-YYYYMMDD-XXXX
+    const memberId = `${koperasi.kode}-${dateStr}-${sequential}`;
 
     const member = await prisma.member.create({
       data: {
