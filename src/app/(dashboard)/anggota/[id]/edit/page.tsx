@@ -25,15 +25,50 @@ export default async function EditAnggotaPage({ params }: PageProps) {
     select: {
       id: true,
       memberId: true,
+      nik: true,
       nama: true,
+      foto: true,
       phone: true,
       email: true,
       status: true,
+      tanggalDaftar: true,
+      ktpRecord: {
+        select: {
+          tempatLahir: true,
+          tanggalLahir: true,
+          jenisKelamin: true,
+          alamat: true,
+          rtRw: true,
+          kelurahan: true,
+          kecamatan: true,
+          kabupaten: true,
+          provinsi: true,
+          agama: true,
+          statusPerkawinan: true,
+          pekerjaan: true,
+          rfidUid: true,
+        },
+      },
     },
   })
 
   if (!member) {
     notFound()
+  }
+
+  const formMember = {
+    id: member.id,
+    nik: member.nik,
+    nama: member.nama,
+    foto: member.foto,
+    phone: member.phone,
+    email: member.email,
+    status: member.status,
+    tanggalDaftar: member.tanggalDaftar.toISOString(),
+    ktpRecord: {
+      ...member.ktpRecord,
+      tanggalLahir: member.ktpRecord.tanggalLahir.toISOString(),
+    },
   }
 
   return (
@@ -53,8 +88,8 @@ export default async function EditAnggotaPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="max-w-xl">
-        <EditMemberForm member={member} />
+      <div className="max-w-3xl">
+        <EditMemberForm member={formMember} />
       </div>
     </div>
   )

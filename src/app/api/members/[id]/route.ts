@@ -48,6 +48,11 @@ export async function GET(
 }
 
 const VALID_STATUS = ['Aktif', 'Tidak Aktif'];
+const VALID_GENDER = ['L', 'P'];
+
+function str(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
 
 export async function PUT(
   request: NextRequest,
@@ -70,10 +75,14 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const nama = typeof body.nama === 'string' ? body.nama.trim() : '';
-    const phone = typeof body.phone === 'string' ? body.phone.trim() : '';
-    const email = typeof body.email === 'string' ? body.email.trim() : '';
-    const status = typeof body.status === 'string' ? body.status : '';
+
+    // Data anggota (tabel Member)
+    const nama = str(body.nama);
+    const phone = str(body.phone);
+    const email = str(body.email);
+    const status = str(body.status);
+    const foto = typeof body.foto === 'string' ? body.foto : undefined;
+    const tanggalDaftarRaw = str(body.tanggalDaftar);
 
     if (!nama || !phone || !status) {
       return NextResponse.json(
@@ -86,8 +95,53 @@ export async function PUT(
       return NextResponse.json({ error: 'Status tidak valid' }, { status: 400 });
     }
 
+    let tanggalDaftar: Date | undefined;
+    if (tanggalDaftarRaw) {
+      tanggalDaftar = new Date(tanggalDaftarRaw);
+      if (isNaN(tanggalDaftar.getTime())) {
+        return NextResponse.json(
+          { error: 'Tanggal terdaftar tidak valid' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Data kependudukan (tabel KtpRecord, terhubung via NIK) — NIK dan rfidUid
+    // tidak pernah diterima dari body ini, jadi tidak bisa diubah dari form edit.
+    const tempatLahir = str(body.tempatLahir);
+    const tanggalLahirRaw = str(body.tanggalLahir);
+    const jenisKelamin = str(body.jenisKelamin);
+    const alamat = str(body.alamat);
+    const rtRw = str(body.rtRw);
+    const kelurahan = str(body.kelurahan);
+    const kecamatan = str(body.kecamatan);
+    const kabupaten = str(body.kabupaten);
+    const provinsi = str(body.provinsi);
+    const agama = str(body.agama);
+    const statusPerkawinan = str(body.statusPerkawinan);
+    const pekerjaan = str(body.pekerjaan);
+
+    if (jenisKelamin && !VALID_GENDER.includes(jenisKelamin)) {
+      return NextResponse.json(
+        { error: 'Jenis kelamin tidak valid' },
+        { status: 400 }
+      );
+    }
+
+    let tanggalLahir: Date | undefined;
+    if (tanggalLahirRaw) {
+      tanggalLahir = new Date(tanggalLahirRaw);
+      if (isNaN(tanggalLahir.getTime())) {
+        return NextResponse.json(
+          { error: 'Tanggal lahir tidak valid' },
+          { status: 400 }
+        );
+      }
+    }
+
     const existing = await prisma.member.findFirst({
       where: { id: memberId, koperasiId },
+      include: { ktpRecord: true },
     });
 
     if (!existing) {
@@ -97,10 +151,37 @@ export async function PUT(
       );
     }
 
-    const member = await prisma.member.update({
-      where: { id: memberId },
-      data: { nama, phone, email: email || null, status },
-      include: { ktpRecord: true },
+    const member = await prisma.$transaction(async (tx) => {
+      await tx.ktpRecord.update({
+        where: { nik: existing.nik },
+        data: {
+          ...(tempatLahir && { tempatLahir }),
+          ...(tanggalLahir && { tanggalLahir }),
+          ...(jenisKelamin && { jenisKelamin }),
+          ...(alamat && { alamat }),
+          ...(rtRw && { rtRw }),
+          ...(kelurahan && { kelurahan }),
+          ...(kecamatan && { kecamatan }),
+          ...(kabupaten && { kabupaten }),
+          ...(provinsi && { provinsi }),
+          ...(agama && { agama }),
+          ...(statusPerkawinan && { statusPerkawinan }),
+          ...(pekerjaan && { pekerjaan }),
+        },
+      });
+
+      return tx.member.update({
+        where: { id: memberId },
+        data: {
+          nama,
+          phone,
+          email: email || null,
+          status,
+          ...(foto && { foto }),
+          ...(tanggalDaftar && { tanggalDaftar }),
+        },
+        include: { ktpRecord: true },
+      });
     });
 
     return NextResponse.json({ member });
