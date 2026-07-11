@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { findMember } from '@/lib/cloud-db'
 import { ArrowLeft, User, MapPin, Briefcase, Phone, Mail, Calendar, CreditCard, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
@@ -20,10 +21,9 @@ export default async function DetailAnggotaPage({ params }: PageProps) {
 
   const { id } = await params
 
-  const member = await prisma.member.findFirst({
-    where: { id: parseInt(id), koperasiId },
-    include: { ktpRecord: true },
-  })
+  const cloudMember = await findMember(id, koperasiId)
+  const ktpRecord = cloudMember ? await prisma.ktpRecord.findUnique({ where: { nik: cloudMember.nik } }) : null
+  const member = cloudMember ? { id: cloudMember.anggota_ref, memberId: cloudMember.anggota_ref, nik: cloudMember.nik, nama: cloudMember.nama, foto: cloudMember.foto || '', phone: cloudMember.phone || '-', email: cloudMember.email, status: cloudMember.status_keanggotaan || 'Tidak Aktif', tanggalDaftar: cloudMember.tanggal_terdaftar || new Date(), ktpRecord } : null
 
   if (!member) {
     notFound()
@@ -157,23 +157,23 @@ export default async function DetailAnggotaPage({ params }: PageProps) {
                 <div>
                   <p className="text-xs text-text-secondary mb-1">Tempat/Tanggal Lahir</p>
                   <p className="text-sm font-medium text-text-primary">
-                    {formatTTL(member.ktpRecord.tempatLahir, member.ktpRecord.tanggalLahir)}
+                    {member.ktpRecord ? formatTTL(member.ktpRecord.tempatLahir, member.ktpRecord.tanggalLahir) : '-'}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-text-secondary mb-1">Jenis Kelamin</p>
                   <p className="text-sm font-medium text-text-primary">
-                    {member.ktpRecord.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan'}
+                    {member.ktpRecord ? (member.ktpRecord.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan') : '-'}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-text-secondary mb-1">Agama</p>
-                  <p className="text-sm font-medium text-text-primary">{member.ktpRecord.agama}</p>
+                  <p className="text-sm font-medium text-text-primary">{member.ktpRecord?.agama || '-'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-text-secondary mb-1">Status Perkawinan</p>
                   <p className="text-sm font-medium text-text-primary">
-                    {member.ktpRecord.statusPerkawinan}
+                    {member.ktpRecord?.statusPerkawinan || '-'}
                   </p>
                 </div>
                 <div className="md:col-span-2">
@@ -182,7 +182,7 @@ export default async function DetailAnggotaPage({ params }: PageProps) {
                     <div>
                       <p className="text-xs text-text-secondary">Pekerjaan</p>
                       <p className="text-sm font-medium text-text-primary">
-                        {member.ktpRecord.pekerjaan}
+                        {member.ktpRecord?.pekerjaan || '-'}
                       </p>
                     </div>
                   </div>
@@ -197,16 +197,16 @@ export default async function DetailAnggotaPage({ params }: PageProps) {
                   </div>
                 </div>
                 <div className="ml-7 space-y-1">
-                  <p className="text-sm text-text-primary">{member.ktpRecord.alamat}</p>
-                  <p className="text-sm text-text-secondary">RT/RW {member.ktpRecord.rtRw}</p>
+                  <p className="text-sm text-text-primary">{member.ktpRecord?.alamat || '-'}</p>
+                  <p className="text-sm text-text-secondary">RT/RW {member.ktpRecord?.rtRw || '-'}</p>
                   <p className="text-sm text-text-primary">
-                    Kel. {member.ktpRecord.kelurahan}
+                    Kel. {member.ktpRecord?.kelurahan || '-'}
                   </p>
                   <p className="text-sm text-text-primary">
-                    Kec. {member.ktpRecord.kecamatan}
+                    Kec. {member.ktpRecord?.kecamatan || '-'}
                   </p>
                   <p className="text-sm text-text-primary">
-                    {member.ktpRecord.kabupaten}, {member.ktpRecord.provinsi}
+                    {member.ktpRecord?.kabupaten || '-'}, {member.ktpRecord?.provinsi || '-'}
                   </p>
                 </div>
               </div>
@@ -214,22 +214,10 @@ export default async function DetailAnggotaPage({ params }: PageProps) {
               <div className="pt-4 border-t border-border">
                 <p className="text-xs text-text-secondary mb-1">RFID UID (KTP)</p>
                 <p className="text-sm font-mono font-medium text-text-primary">
-                  {member.ktpRecord.rfidUid}
+                  {member.ktpRecord?.rfidUid || '-'}
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-border">
-                <p className="text-xs text-text-secondary mb-1">UID Kartu Kopdes</p>
-                {member.kopdesCardUid ? (
-                  <p className="text-sm font-mono font-medium text-text-primary">
-                    {member.kopdesCardUid}
-                  </p>
-                ) : (
-                  <p className="text-sm text-text-secondary italic">
-                    Belum ditautkan — edit anggota untuk menautkan kartu
-                  </p>
-                )}
-              </div>
             </div>
           </div>
 

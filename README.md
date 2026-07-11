@@ -209,6 +209,31 @@ Admin dapat mengubah atau menghapus data anggota dari halaman **Daftar Anggota**
 
 ## 🗄️ Database
 
+### Anggota dan Pengurus Cloud SQL
+
+Data operasional **pengurus** dan **anggota** memakai database Cloud SQL
+`hackathon_2026`. Login aplikasi berada di `app_pengurus_login` dan memiliki
+FK komposit ke `pengurus_koperasi (pengurus_ref, koperasi_ref)`. Pendaftaran
+anggota menulis ke `anggota_koperasi` serta `app_member_profile`; `koperasi_ref`
+selalu diambil dari JWT pengurus, bukan dari browser.
+
+NIK riil 16 digit dibuat unik secara lintas koperasi melalui partial unique
+index. Data historis panitia yang NIK-nya sudah termask tetap tidak diubah.
+Tidak ada UID kartu anggota atau data biometrik pada model ini. RFID hanya
+dipakai untuk lookup KTP mock lokal.
+
+Untuk development lokal, jalankan Cloud SQL Auth Proxy pada port `5434` dan
+atur `CLOUDSQL_DATABASE_URL` di `.env`; `DATABASE_URL` tetap dipakai Prisma
+lokal untuk KTP mock. Sesudah proxy aktif:
+
+```bash
+npm run cloud:migrate
+npm run cloud:seed-admins
+```
+
+Login demo: `admin1`, `admin2`, atau `admin3`, semuanya memakai password
+`admin123`.
+
 ### Melihat Database via Prisma Studio
 
 ```bash
@@ -261,10 +286,10 @@ Kartu RFID yang sudah terdaftar di database:
 
 | UID | Nama |
 |-----|------|
-| `0013910654` | Ahmad Suryadi |
-| `0013624776` | Siti Nurhaliza |
-| `4167398946` | Budi Santoso |
-| `4167372726` | Dewi Lestari |
+| `4173892927` | Ahmad Suryadi |
+| `2976549637` | Siti Nurhaliza |
+| `1671654914` | Budi Santoso |
+| `2708062991` | Dewi Lestari |
 
 ## 📜 Scripts
 

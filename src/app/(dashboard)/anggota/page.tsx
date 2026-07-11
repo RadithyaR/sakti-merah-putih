@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { listMembers } from '@/lib/cloud-db'
 import { Users, Eye, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import SearchFilter from '@/components/SearchFilter'
@@ -26,38 +26,18 @@ export default async function AnggotaPage({ searchParams }: PageProps) {
   const page = parseInt((params.page as string) || '1', 10)
   const limit = 10
 
-  const where: Record<string, unknown> = { koperasiId }
-
-  if (search) {
-    where.OR = [
-      { nama: { contains: search } },
-      { nik: { contains: search } },
-    ]
-  }
-
-  if (status) {
-    where.status = status
-  }
-
-  const [members, total] = await Promise.all([
-    prisma.member.findMany({
-      where,
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { tanggalDaftar: 'desc' },
-      select: {
-        id: true,
-        memberId: true,
-        nik: true,
-        nama: true,
-        foto: true,
-        phone: true,
-        tanggalDaftar: true,
-        status: true,
-      },
-    }),
-    prisma.member.count({ where }),
-  ])
+  const result = await listMembers(koperasiId, search, status, limit, (page - 1) * limit)
+  const members = result.members.map((member) => ({
+    id: member.anggota_ref,
+    memberId: member.anggota_ref,
+    nik: member.nik,
+    nama: member.nama,
+    foto: member.foto,
+    phone: member.phone,
+    tanggalDaftar: member.tanggal_terdaftar,
+    status: member.status_keanggotaan || 'Tidak Aktif',
+  }))
+  const total = result.total
 
   const totalPages = Math.ceil(total / limit)
 
@@ -149,11 +129,11 @@ export default async function AnggotaPage({ searchParams }: PageProps) {
                         {member.nama}
                       </td>
                       <td className="px-6 py-4 text-sm text-text-secondary">
-                        {new Date(member.tanggalDaftar).toLocaleDateString('id-ID', {
+                        {member.tanggalDaftar ? new Date(member.tanggalDaftar).toLocaleDateString('id-ID', {
                           day: 'numeric',
                           month: 'long',
                           year: 'numeric',
-                        })}
+                        }) : '-'}
                       </td>
                       <td className="px-6 py-4">
                         <span

@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { cloudQuery } from '@/lib/cloud-db'
 import { Users, UserPlus, UserCheck, UserX, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { getKoperasiId } from '@/lib/auth'
@@ -16,30 +16,27 @@ export default async function DashboardPage() {
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
-  const [totalMembers, activeMembers, inactiveMembers, newThisMonth, recentMembers] =
-    await Promise.all([
-      prisma.member.count({ where: { koperasiId } }),
-      prisma.member.count({ where: { status: 'Aktif', koperasiId } }),
-      prisma.member.count({ where: { status: 'Nonaktif', koperasiId } }),
-      prisma.member.count({
-        where: {
-          tanggalDaftar: { gte: startOfMonth },
-          koperasiId,
-        },
-      }),
-      prisma.member.findMany({
-        where: { koperasiId },
-        take: 5,
-        orderBy: { tanggalDaftar: 'desc' },
-        select: {
-          id: true,
-          memberId: true,
-          nama: true,
-          tanggalDaftar: true,
-          status: true,
-        },
-      }),
-    ])
+  const [counts, recent] = await Promise.all([
+    cloudQuery<{ total: string; active: string; inactive: string; monthly: string }>(`
+      select count(*) as total,
+             count(*) filter (where status_keanggotaan = 'Aktif') as active,
+             count(*) filter (where status_keanggotaan <> 'Aktif') as inactive,
+             count(*) filter (where tanggal_terdaftar >= $2::date) as monthly
+        from anggota_koperasi
+       where koperasi_ref = $1`, [koperasiId, startOfMonth.toISOString().slice(0, 10)]),
+    cloudQuery<{ id: string; memberId: string; nama: string; tanggalDaftar: Date | null; status: string | null }>(`
+      select anggota_ref as id, anggota_ref as "memberId", nama,
+             tanggal_terdaftar as "tanggalDaftar", status_keanggotaan as status
+        from anggota_koperasi
+       where koperasi_ref = $1
+       order by tanggal_terdaftar desc nulls last
+       limit 5`, [koperasiId]),
+  ])
+  const totalMembers = Number(counts.rows[0].total)
+  const activeMembers = Number(counts.rows[0].active)
+  const inactiveMembers = Number(counts.rows[0].inactive)
+  const newThisMonth = Number(counts.rows[0].monthly)
+  const recentMembers = recent.rows
 
   const stats = [
     {
@@ -150,11 +147,11 @@ export default async function DashboardPage() {
                       {member.nama}
                     </td>
                     <td className="px-6 py-4 text-sm text-text-secondary">
-                      {new Date(member.tanggalDaftar).toLocaleDateString('id-ID', {
+                      {member.tanggalDaftar ? new Date(member.tanggalDaftar).toLocaleDateString('id-ID', {
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric',
-                      })}
+                      }) : '-'}
                     </td>
                     <td className="px-6 py-4">
                       <span
@@ -164,7 +161,7 @@ export default async function DashboardPage() {
                             : 'bg-red-100 text-red-700'
                         }`}
                       >
-                        {member.status}
+                        {member.status || '-'}
                       </span>
                     </td>
                   </tr>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { comparePassword, signToken } from '@/lib/auth';
+import { cloudQuery } from '@/lib/cloud-db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,10 +13,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { username },
-      include: { koperasi: true }
-    });
+    const result = await cloudQuery<{
+      pengurus_ref: string; koperasi_ref: string; username: string; password_hash: string;
+      role: string; nama: string | null; nama_koperasi: string | null; nik_koperasi: string | null;
+    }>(`select l.pengurus_ref, l.koperasi_ref, l.username, l.password_hash, l.role,
+                 p.nama, pr.nama_koperasi, pr.nik_koperasi
+            from app_pengurus_login l
+            join pengurus_koperasi p on p.pengurus_ref=l.pengurus_ref and p.koperasi_ref=l.koperasi_ref
+            left join profil_koperasi pr on pr.koperasi_ref=l.koperasi_ref
+           where l.username=$1`, [username]);
+    const user = result.rows[0];
 
     if (!user) {
       return NextResponse.json(
@@ -25,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isValidPassword = await comparePassword(password, user.password);
+    const isValidPassword = await comparePassword(password, user.password_hash);
 
     if (!isValidPassword) {
       return NextResponse.json(
@@ -35,21 +41,23 @@ export async function POST(request: NextRequest) {
     }
 
     const token = signToken({
-      id: user.id,
+      pengurusRef: user.pengurus_ref,
+      id: 0,
       username: user.username,
       role: user.role,
-      koperasiId: user.koperasiId,
+      koperasiRef: user.koperasi_ref,
+      koperasiId: 0,
     });
 
     const response = NextResponse.json({
       token,
       user: {
-        id: user.id,
+        id: user.pengurus_ref,
         username: user.username,
         nama: user.nama,
         role: user.role,
-        koperasiId: user.koperasiId,
-        koperasi: user.koperasi,
+        koperasiRef: user.koperasi_ref,
+        koperasi: { nama: user.nama_koperasi || `Koperasi ${user.koperasi_ref}`, nomorHukum: user.nik_koperasi },
       },
     });
 

@@ -37,7 +37,7 @@ export default function PendaftaranPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [memberId, setMemberId] = useState("");
-  const [newMemberDbId, setNewMemberDbId] = useState<number | null>(null);
+  const [newMemberDbId, setNewMemberDbId] = useState<string | null>(null);
   const [kopdesCardUid, setKopdesCardUid] = useState("");
   const [cardError, setCardError] = useState("");
 
@@ -80,10 +80,6 @@ export default function PendaftaranPage() {
     try {
       const token = localStorage.getItem("token");
 
-      // Decode token to get koperasiId
-      const tokenPayload = JSON.parse(atob(token!.split(".")[1]));
-      const koperasiId = tokenPayload.koperasiId;
-
       const res = await fetch("/api/members", {
         method: "POST",
         headers: {
@@ -96,8 +92,8 @@ export default function PendaftaranPage() {
           phone,
           email: email || undefined,
           foto,
-          rfidUid: ktpData.rfidUid,
-          koperasiId,
+          jenisKelamin: ktpData.jenisKelamin,
+          pekerjaan: ktpData.pekerjaan,
         }),
       });
 
@@ -162,7 +158,7 @@ export default function PendaftaranPage() {
     setError("");
     setSuccess(false);
     setMemberId("");
-    setNewMemberDbId(null);
+      setNewMemberDbId(null);
     setKopdesCardUid("");
     setCardError("");
   };
