@@ -45,7 +45,7 @@ export default function Home() {
               href="/login"
               className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold text-lg"
             >
-              Mulai Sekarang
+              Masuk
             </Link>
             <Link
               href="/test-kartu"
