@@ -1,5 +1,4 @@
-import { prisma } from '@/lib/prisma'
-import { findMember } from '@/lib/cloud-db'
+import { findKtpMockByNik, findMember } from '@/lib/cloud-db'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
@@ -22,7 +21,7 @@ export default async function EditAnggotaPage({ params }: PageProps) {
   const { id } = await params
 
   const cloudMember = await findMember(id, koperasiId)
-  const ktpRecord = cloudMember ? await prisma.ktpRecord.findUnique({ where: { nik: cloudMember.nik } }) : null
+  const ktpRecord = cloudMember ? await findKtpMockByNik(cloudMember.nik) : null
   const member = cloudMember && ktpRecord ? {
     id: cloudMember.anggota_ref,
     memberId: cloudMember.anggota_ref,

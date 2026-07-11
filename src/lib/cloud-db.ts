@@ -48,6 +48,68 @@ export type MemberView = CloudMember & {
   nik_koperasi: string | null
 }
 
+type CloudKtpMock = {
+  nik: string
+  rfid_uid: string
+  nama: string
+  tempat_lahir: string
+  tanggal_lahir: Date | string
+  jenis_kelamin: string
+  alamat: string
+  rt_rw: string
+  kelurahan: string
+  kecamatan: string
+  kabupaten: string
+  provinsi: string
+  agama: string
+  status_perkawinan: string
+  pekerjaan: string
+}
+
+export type KtpMock = {
+  nik: string
+  rfidUid: string
+  nama: string
+  tempatLahir: string
+  tanggalLahir: Date
+  jenisKelamin: string
+  alamat: string
+  rtRw: string
+  kelurahan: string
+  kecamatan: string
+  kabupaten: string
+  provinsi: string
+  agama: string
+  statusPerkawinan: string
+  pekerjaan: string
+}
+
+function mapKtpMock(record: CloudKtpMock): KtpMock {
+  return {
+    nik: record.nik, rfidUid: record.rfid_uid, nama: record.nama,
+    tempatLahir: record.tempat_lahir, tanggalLahir: new Date(record.tanggal_lahir),
+    jenisKelamin: record.jenis_kelamin, alamat: record.alamat, rtRw: record.rt_rw,
+    kelurahan: record.kelurahan, kecamatan: record.kecamatan, kabupaten: record.kabupaten,
+    provinsi: record.provinsi, agama: record.agama, statusPerkawinan: record.status_perkawinan,
+    pekerjaan: record.pekerjaan,
+  }
+}
+
+export async function findKtpMockByRfidUid(rfidUid: string) {
+  const result = await cloudQuery<CloudKtpMock>(`select nik,rfid_uid,nama,tempat_lahir,tanggal_lahir,jenis_kelamin,alamat,rt_rw,kelurahan,kecamatan,kabupaten,provinsi,agama,status_perkawinan,pekerjaan from app_ktp_mock where rfid_uid=$1`, [rfidUid])
+  return result.rows[0] ? mapKtpMock(result.rows[0]) : null
+}
+
+export async function findKtpMockByNik(nik: string) {
+  const result = await cloudQuery<CloudKtpMock>(`select nik,rfid_uid,nama,tempat_lahir,tanggal_lahir,jenis_kelamin,alamat,rt_rw,kelurahan,kecamatan,kabupaten,provinsi,agama,status_perkawinan,pekerjaan from app_ktp_mock where nik=$1`, [nik])
+  return result.rows[0] ? mapKtpMock(result.rows[0]) : null
+}
+
+export async function randomKtpMock() {
+  const result = await cloudQuery<CloudKtpMock>(`select nik,rfid_uid,nama,tempat_lahir,tanggal_lahir,jenis_kelamin,alamat,rt_rw,kelurahan,kecamatan,kabupaten,provinsi,agama,status_perkawinan,pekerjaan from app_ktp_mock order by random() limit 1`)
+  return result.rows[0] ? mapKtpMock(result.rows[0]) : null
+}
+
 export async function listMembers(koperasiRef: string, search = '', status = '', limit = 10, offset = 0) {
   const filters = ['a.koperasi_ref = $1']
   const values: unknown[] = [koperasiRef]

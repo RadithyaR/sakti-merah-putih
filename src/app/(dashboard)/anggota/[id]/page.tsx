@@ -1,5 +1,4 @@
-import { prisma } from '@/lib/prisma'
-import { findMember } from '@/lib/cloud-db'
+import { findKtpMockByNik, findMember } from '@/lib/cloud-db'
 import { ArrowLeft, User, MapPin, Briefcase, Phone, Mail, Calendar, CreditCard, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
@@ -22,7 +21,7 @@ export default async function DetailAnggotaPage({ params }: PageProps) {
   const { id } = await params
 
   const cloudMember = await findMember(id, koperasiId)
-  const ktpRecord = cloudMember ? await prisma.ktpRecord.findUnique({ where: { nik: cloudMember.nik } }) : null
+  const ktpRecord = cloudMember ? await findKtpMockByNik(cloudMember.nik) : null
   const member = cloudMember ? { id: cloudMember.anggota_ref, memberId: cloudMember.anggota_ref, nik: cloudMember.nik, nama: cloudMember.nama, foto: cloudMember.foto || '', phone: cloudMember.phone || '-', email: cloudMember.email, status: cloudMember.status_keanggotaan || 'Tidak Aktif', tanggalDaftar: cloudMember.tanggal_terdaftar || new Date(), memberCardUid: cloudMember.member_card_uid, ktpRecord } : null
 
   if (!member) {

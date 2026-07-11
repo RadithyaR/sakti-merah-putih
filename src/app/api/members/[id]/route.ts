@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
-import { cloudQuery, findMember, withCloudTransaction } from '@/lib/cloud-db'
-import { prisma } from '@/lib/prisma'
+import { cloudQuery, findKtpMockByNik, findMember, withCloudTransaction } from '@/lib/cloud-db'
 
 function session(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
@@ -14,7 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params
     const member = await findMember(id, user.koperasiRef)
     if (!member) return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
-    const ktpRecord = await prisma.ktpRecord.findUnique({ where: { nik: member.nik } })
+    const ktpRecord = await findKtpMockByNik(member.nik)
     return NextResponse.json({ member: { ...member, id: member.anggota_ref, memberId: member.anggota_ref, status: member.status_keanggotaan, tanggalDaftar: member.tanggal_terdaftar, ktpRecord } })
   } catch { return NextResponse.json({ error: 'Terjadi kesalahan pada server' }, { status: 500 }) }
 }

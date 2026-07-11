@@ -135,6 +135,13 @@ FINGERPRINT_MODE="demo"
 FINGERPRINT_AGENT_URL="http://127.0.0.1:7373"
 ```
 
+Untuk Cloud Run, data KTP **mock** dan mapping `rfid_uid` berada di tabel Cloud SQL `app_ktp_mock`, bukan di database Prisma lokal. Setelah migration Cloud SQL, salin seed lokal dengan:
+
+```bash
+set -a; source <(rg '^DATABASE_URL=|^CLOUDSQL_DATABASE_URL=' .env); set +a
+npm run cloud:seed-ktp-mock
+```
+
 ### 3. Setup Database
 
 ```bash

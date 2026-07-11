@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "cloud:migrate": "node scripts/migrate-cloud.cjs",
-    "cloud:seed-admins": "node scripts/seed-cloud-admins.cjs"
+    "cloud:seed-admins": "node scripts/seed-cloud-admins.cjs",
+    "cloud:seed-ktp-mock": "node scripts/seed-cloud-ktp-mock.cjs"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
