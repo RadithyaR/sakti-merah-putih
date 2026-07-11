@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Wifi, Camera, Users } from "lucide-react";
+import { Wifi, Camera, CreditCard, Users } from "lucide-react";
 
 export default function Home() {
   return (
@@ -46,6 +46,12 @@ export default function Home() {
               className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold text-lg"
             >
               Mulai Sekarang
+            </Link>
+            <Link
+              href="/test-kartu"
+              className="px-8 py-4 border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors font-semibold text-lg"
+            >
+              Test Kartu
             </Link>
             <a
               href="#fitur"
@@ -110,6 +116,7 @@ export default function Home() {
               </p>
             </div>
           </div>
+          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-text-secondary"><CreditCard className="w-4 h-4 text-primary" />Test kartu publik hanya menampilkan data keanggotaan yang aman.</div>
         </div>
       </section>
 

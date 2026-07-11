@@ -8,6 +8,7 @@ Sistem pendaftaran anggota koperasi berbasis web dengan integrasi RFID reader da
 - **Database Kependudukan** - Data KTP tersimpan di database PostgreSQL, terintegrasi dengan RFID UID
 - **Foto Digital** - Ambil foto anggota langsung dari webcam terintegrasi
 - **Kartu Kopdes** - Tautkan UID kartu anggota Kopdes fisik pasca-pendaftaran, dipakai untuk verifikasi anggota ke depannya (menggantikan scan KTP berulang)
+- **Test Kartu Publik** - Verifikasi kartu tanpa login dengan nama, nomor anggota, dan lokasi koperasi saja; NIK dan data kontak tidak diekspos
 - **Simulasi Sidik Jari Cloud Run** - Enrol dan verifikasi alur sidik jari tanpa raw image atau template biometrik; menyimpan hanya status, jumlah tap, dan hash kode simulasi
 - **Multi-Tenant** - Setiap koperasi memiliki akun admin dan data anggota terpisah
 - **Dashboard** - Statistik dan ringkasan data anggota per koperasi
@@ -44,6 +45,7 @@ Browser
         |-- /api/members/*    - CRUD anggota (GET/PUT/DELETE per-anggota)
         |-- /api/members/[id]/card - Generate PDF kartu anggota (CR80)
         |-- /api/members/[id]/card-uid - Tautkan UID kartu Kopdes fisik
+        |-- /api/public/member-card - Verifikasi kartu dengan data publik terbatas
         |-- /api/members/[id]/fingerprint/tap - Simulasi enrol satu tap (atau agent stasiun bila diaktifkan)
         |-- /api/members/[id]/fingerprint/verify - Verifikasi kode simulasi tanpa data biometrik
         |-- /api/ktp/lookup   - Lookup KTP by RFID UID
