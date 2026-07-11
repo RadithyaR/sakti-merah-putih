@@ -7,6 +7,9 @@ Sistem pendaftaran anggota koperasi berbasis web dengan integrasi RFID reader da
 - **RFID Scanner** - Tap kartu RFID untuk membaca data KTP warga secara otomatis
 - **Database Kependudukan** - Data KTP tersimpan di database PostgreSQL, terintegrasi dengan RFID UID
 - **Foto Digital** - Ambil foto anggota langsung dari webcam terintegrasi
+- **Kartu Kopdes** - Tautkan UID kartu anggota Kopdes fisik pasca-pendaftaran, dipakai untuk verifikasi anggota ke depannya (menggantikan scan KTP berulang)
+- **Test Kartu Publik** - Verifikasi kartu tanpa login dengan nama, nomor anggota, dan lokasi koperasi saja; NIK dan data kontak tidak diekspos
+- **Simulasi Sidik Jari Cloud Run** - Enrol dan verifikasi alur sidik jari tanpa raw image atau template biometrik; menyimpan hanya status, jumlah tap, dan hash kode simulasi
 - **Multi-Tenant** - Setiap koperasi memiliki akun admin dan data anggota terpisah
 - **Dashboard** - Statistik dan ringkasan data anggota per koperasi
 - **Manajemen Anggota** - Daftar, cari, filter, lihat detail, **edit**, dan **hapus** data anggota
@@ -41,6 +44,10 @@ Browser
         |-- /api/auth/*       - Autentikasi (login, me)
         |-- /api/members/*    - CRUD anggota (GET/PUT/DELETE per-anggota)
         |-- /api/members/[id]/card - Generate PDF kartu anggota (CR80)
+        |-- /api/members/[id]/card-uid - Tautkan UID kartu Kopdes fisik
+        |-- /api/public/member-card - Verifikasi kartu dengan data publik terbatas
+        |-- /api/members/[id]/fingerprint/tap - Simulasi enrol satu tap (atau agent stasiun bila diaktifkan)
+        |-- /api/members/[id]/fingerprint/verify - Verifikasi kode simulasi tanpa data biometrik
         |-- /api/ktp/lookup   - Lookup KTP by RFID UID
         |-- /api/rfid/scan    - Simulasi scan RFID
         |
@@ -79,12 +86,14 @@ koperasi-merah-putih/
 │   │   └── api/               # API Routes
 │   │       ├── auth/          # Login & me
 │   │       ├── members/       # CRUD anggota
-│   │       │   └── [id]/card/ # Generate PDF kartu anggota
+│   │       │   ├── [id]/card/     # Generate PDF kartu anggota
+│   │       │   └── [id]/card-uid/ # Tautkan UID kartu Kopdes fisik
 │   │       ├── ktp/           # Lookup KTP
 │   │       └── rfid/          # Simulasi RFID
 │   ├── components/
 │   │   ├── Layout/            # Sidebar, Navbar
-│   │   ├── RfidScanner.tsx    # Komponen RFID scanner
+│   │   ├── RfidScanner.tsx    # Komponen RFID scanner (KTP)
+│   │   ├── KopdesCardScanner.tsx # Komponen scan/tautkan UID kartu Kopdes
 │   │   ├── KtpCard.tsx        # Card data KTP
 │   │   ├── WebcamCapture.tsx  # Komponen webcam
 │   │   ├── SearchFilter.tsx   # Search & filter
@@ -123,6 +132,16 @@ Edit file `.env`:
 ```env
 DATABASE_URL="postgresql://postgres:PASSWORD@localhost:5432/koperasi_db"
 JWT_SECRET="ganti-dengan-secret-key-anda"
+# Opsional. Gunakan `station` hanya di workstation yang menjalankan agent CS9711.
+FINGERPRINT_MODE="demo"
+FINGERPRINT_AGENT_URL="http://127.0.0.1:7373"
+```
+
+Untuk Cloud Run, data KTP **mock** dan mapping `rfid_uid` berada di tabel Cloud SQL `app_ktp_mock`, bukan di database Prisma lokal. Setelah migration Cloud SQL, salin seed lokal dengan:
+
+```bash
+set -a; source <(rg '^DATABASE_URL=|^CLOUDSQL_DATABASE_URL=' .env); set +a
+npm run cloud:seed-ktp-mock
 ```
 
 ### 3. Setup Database
@@ -163,21 +182,27 @@ Setelah seed, tersedia 3 akun admin untuk 3 koperasi berbeda:
 
 ### 1. Pendaftaran Anggota Baru
 
-1. Login sebagai admin koperasi
-2. Buka menu **Pendaftaran Anggota**
-3. Tap kartu RFID ke reader, atau klik **Simulasi** untuk demo
-4. Data KTP otomatis tampil dari database kependudukan
-5. Ambil foto anggota via webcam
-6. Isi nomor telepon dan email (opsional)
-7. Klik **Daftarkan Anggota**
-8. Nomor anggota otomatis digenerate (format: `KPR-YYYYMMDD-XXX`)
+Alur pendaftaran terdiri dari 5 langkah:
+
+1. **Scan RFID** — Login sebagai admin koperasi, buka menu **Pendaftaran Anggota**, lalu tap kartu RFID KTP ke reader (atau klik **Simulasi** untuk demo). Data KTP otomatis tampil dari database kependudukan.
+2. **Data & Foto** — Ambil foto anggota via webcam, isi nomor telepon dan email (opsional), lalu klik **Daftarkan Anggota**. Nomor anggota otomatis digenerate (format: `KODE-YYYYMMDD-XXXX`).
+3. **Kartu Kopdes** — Masukkan atau tap UID kartu anggota Kopdes fisik (bukan KTP) dengan format tepat 10 digit, atau klik **Lewati untuk Saat Ini** jika kartu fisik belum tersedia. Kartu ini dipakai untuk verifikasi anggota ke depannya.
+4. **Sidik Jari** — Untuk Cloud Run, klik **Simulasikan Tap** empat kali. Sistem menyimpan status enrol, jumlah tap, dan hash kode simulasi saja; tidak ada citra, vektor, minutiae, atau template sidik jari. Setelah selesai, kode enam digit dapat dipakai untuk menguji verifikasi.
+5. **Selesai** — Ringkasan nomor anggota dan tombol cetak/unduh kartu.
+
+Kalau langkah 3 dilewati saat pendaftaran, UID kartu Kopdes bisa ditautkan belakangan lewat halaman **Edit Anggota** (field "UID Kartu Kopdes") — juga berguna untuk mengganti kartu yang hilang/rusak.
+
+### Mode Simulasi dan Stasiun Biometrik
+
+Mode default `demo` aman untuk Cloud Run dan tidak membutuhkan perangkat USB. Ia tidak boleh diperlakukan sebagai autentikasi biometrik nyata. Bila nanti ada stasiun CS9711, set `FINGERPRINT_MODE=station`; jalankan matcher dan agent dari proyek `SAKTI-MerahPutih` pada workstation tersebut. Browser tetap tidak mendapat akses USB, dan frame maupun template tidak dikirim ke Cloud SQL.
 
 ### 2. RFID Reader
 
-Aplikasi mendukung RFID reader USB dengan mode **HID Keyboard Emulation**:
-- UID kartu otomatis terketik ke input field
-- Tekan **Enter** untuk trigger lookup
-- Input field auto-focus untuk menerima input dari reader
+Aplikasi mendukung RFID reader USB dengan mode **HID Keyboard Emulation**, dipakai di dua tempat berbeda:
+- **Scan KTP** (langkah 1 pendaftaran) — lookup ke database kependudukan via `/api/ktp/lookup`
+- **Scan Kartu Kopdes** (langkah 3 pendaftaran, atau dari halaman edit) — hanya menautkan UID mentah ke anggota, tanpa lookup
+
+Untuk keduanya: UID kartu otomatis terketik ke input field yang auto-focus, tekan **Enter** untuk konfirmasi.
 
 ### 3. Multi-Tenant
 
@@ -203,6 +228,32 @@ Admin dapat mengubah atau menghapus data anggota dari halaman **Daftar Anggota**
 - Kedua aksi di-scope ke `koperasiId` admin yang login - admin koperasi lain tidak bisa mengedit/menghapus anggota koperasi lain meski menebak ID-nya.
 
 ## 🗄️ Database
+
+### Anggota dan Pengurus Cloud SQL
+
+Data operasional **pengurus** dan **anggota** memakai database Cloud SQL
+`hackathon_2026`. Login aplikasi berada di `app_pengurus_login` dan memiliki
+FK komposit ke `pengurus_koperasi (pengurus_ref, koperasi_ref)`. Pendaftaran
+anggota menulis ke `anggota_koperasi` serta `app_member_profile`; `koperasi_ref`
+selalu diambil dari JWT pengurus, bukan dari browser.
+
+NIK riil 16 digit dibuat unik secara lintas koperasi melalui partial unique
+index. Data historis panitia yang NIK-nya sudah termask tetap tidak diubah.
+UID kartu anggota bersifat opsional, numerik 10 digit, dan unik secara global
+(contoh: `0013910654`). UID ini berbeda dari RFID KTP mock. Data biometrik
+belum disimpan pada model ini.
+
+Untuk development lokal, jalankan Cloud SQL Auth Proxy pada port `5434` dan
+atur `CLOUDSQL_DATABASE_URL` di `.env`; `DATABASE_URL` tetap dipakai Prisma
+lokal untuk KTP mock. Sesudah proxy aktif:
+
+```bash
+npm run cloud:migrate
+npm run cloud:seed-admins
+```
+
+Login demo: `admin1`, `admin2`, atau `admin3`, semuanya memakai password
+`admin123`.
 
 ### Melihat Database via Prisma Studio
 
@@ -256,10 +307,10 @@ Kartu RFID yang sudah terdaftar di database:
 
 | UID | Nama |
 |-----|------|
-| `0013910654` | Ahmad Suryadi |
-| `0013624776` | Siti Nurhaliza |
-| `4167398946` | Budi Santoso |
-| `4167372726` | Dewi Lestari |
+| `4173892927` | Ahmad Suryadi |
+| `2976549637` | Siti Nurhaliza |
+| `1671654914` | Budi Santoso |
+| `2708062991` | Dewi Lestari |
 
 ## 📜 Scripts
 

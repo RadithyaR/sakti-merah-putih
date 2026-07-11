@@ -3,7 +3,7 @@
 import { Printer, FileDown } from 'lucide-react'
 
 interface CardPrintActionsProps {
-  memberId: number
+  memberId: string
 }
 
 export default function CardPrintActions({ memberId }: CardPrintActionsProps) {

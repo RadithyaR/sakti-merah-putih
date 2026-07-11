@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { findKtpMockByRfidUid } from '@/lib/cloud-db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,12 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const ktpRecord = await prisma.ktpRecord.findUnique({
-      where: { rfidUid },
-      include: {
-        member: true,
-      },
-    });
+    const ktpRecord = await findKtpMockByRfidUid(String(rfidUid).trim());
 
     if (!ktpRecord) {
       return NextResponse.json(

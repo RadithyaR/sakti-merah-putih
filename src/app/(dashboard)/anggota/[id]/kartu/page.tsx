@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { findMember } from '@/lib/cloud-db'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
@@ -22,10 +22,8 @@ export default async function KartuAnggotaPage({ params }: PageProps) {
 
   const { id } = await params
 
-  const member = await prisma.member.findFirst({
-    where: { id: parseInt(id), koperasiId },
-    include: { koperasi: true },
-  })
+  const cloudMember = await findMember(id, koperasiId)
+  const member = cloudMember ? { id: cloudMember.anggota_ref, memberId: cloudMember.anggota_ref, nama: cloudMember.nama, nik: cloudMember.nik, koperasi: { nama: cloudMember.nama_koperasi || `Koperasi ${cloudMember.koperasi_ref}`, kode: cloudMember.nik_koperasi || cloudMember.koperasi_ref } } : null
 
   if (!member) {
     notFound()

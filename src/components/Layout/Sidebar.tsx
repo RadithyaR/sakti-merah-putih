@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Shield, Users, UserPlus, LogOut } from "lucide-react";
+import { Shield, Users, UserPlus, CreditCard, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -20,6 +20,7 @@ export default function Sidebar() {
     { href: "/dashboard", label: "Dashboard", icon: Shield },
     { href: "/pendaftaran", label: "Pendaftaran Anggota", icon: UserPlus },
     { href: "/anggota", label: "Daftar Anggota", icon: Users },
+    { href: "/verifikasi-kartu", label: "Test Kartu Anggota", icon: CreditCard },
   ];
 
   return (

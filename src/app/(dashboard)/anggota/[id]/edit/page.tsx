@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { findKtpMockByNik, findMember } from '@/lib/cloud-db'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
@@ -20,37 +20,20 @@ export default async function EditAnggotaPage({ params }: PageProps) {
 
   const { id } = await params
 
-  const member = await prisma.member.findFirst({
-    where: { id: parseInt(id), koperasiId },
-    select: {
-      id: true,
-      memberId: true,
-      nik: true,
-      nama: true,
-      foto: true,
-      phone: true,
-      email: true,
-      status: true,
-      tanggalDaftar: true,
-      ktpRecord: {
-        select: {
-          tempatLahir: true,
-          tanggalLahir: true,
-          jenisKelamin: true,
-          alamat: true,
-          rtRw: true,
-          kelurahan: true,
-          kecamatan: true,
-          kabupaten: true,
-          provinsi: true,
-          agama: true,
-          statusPerkawinan: true,
-          pekerjaan: true,
-          rfidUid: true,
-        },
-      },
-    },
-  })
+  const cloudMember = await findMember(id, koperasiId)
+  const ktpRecord = cloudMember ? await findKtpMockByNik(cloudMember.nik) : null
+  const member = cloudMember && ktpRecord ? {
+    id: cloudMember.anggota_ref,
+    memberId: cloudMember.anggota_ref,
+    nik: cloudMember.nik,
+    nama: cloudMember.nama,
+    foto: cloudMember.foto || '',
+    phone: cloudMember.phone || '',
+    email: cloudMember.email,
+    status: cloudMember.status_keanggotaan || 'Tidak Aktif',
+    tanggalDaftar: cloudMember.tanggal_terdaftar || new Date(),
+    ktpRecord,
+  } : null
 
   if (!member) {
     notFound()
@@ -65,6 +48,7 @@ export default async function EditAnggotaPage({ params }: PageProps) {
     email: member.email,
     status: member.status,
     tanggalDaftar: member.tanggalDaftar.toISOString(),
+    memberCardUid: cloudMember.member_card_uid,
     ktpRecord: {
       ...member.ktpRecord,
       tanggalLahir: member.ktpRecord.tanggalLahir.toISOString(),

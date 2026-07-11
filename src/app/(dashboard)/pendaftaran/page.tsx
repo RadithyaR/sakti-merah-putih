@@ -6,6 +6,9 @@ import { UserPlus, CheckCircle, AlertCircle, CreditCard, FileDown } from "lucide
 import RfidScanner from "@/components/RfidScanner";
 import KtpCard from "@/components/KtpCard";
 import WebcamCapture from "@/components/WebcamCapture";
+import KopdesCardScanner from "@/components/KopdesCardScanner";
+import FingerprintEnrollment from "@/components/FingerprintEnrollment";
+import FingerprintDemoVerification from "@/components/FingerprintDemoVerification";
 
 interface KtpData {
   nik: string;
@@ -36,7 +39,10 @@ export default function PendaftaranPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [memberId, setMemberId] = useState("");
-  const [newMemberDbId, setNewMemberDbId] = useState<number | null>(null);
+  const [newMemberDbId, setNewMemberDbId] = useState<string | null>(null);
+  const [kopdesCardUid, setKopdesCardUid] = useState("");
+  const [cardError, setCardError] = useState("");
+  const [fingerprintDemoCode, setFingerprintDemoCode] = useState("");
 
   const handleKtpFound = (ktp: KtpData) => {
     setKtpData(ktp);
@@ -77,10 +83,6 @@ export default function PendaftaranPage() {
     try {
       const token = localStorage.getItem("token");
 
-      // Decode token to get koperasiId
-      const tokenPayload = JSON.parse(atob(token!.split(".")[1]));
-      const koperasiId = tokenPayload.koperasiId;
-
       const res = await fetch("/api/members", {
         method: "POST",
         headers: {
@@ -93,8 +95,8 @@ export default function PendaftaranPage() {
           phone,
           email: email || undefined,
           foto,
-          rfidUid: ktpData.rfidUid,
-          koperasiId,
+          jenisKelamin: ktpData.jenisKelamin,
+          pekerjaan: ktpData.pekerjaan,
         }),
       });
 
@@ -106,13 +108,52 @@ export default function PendaftaranPage() {
 
       setMemberId(data.member.memberId);
       setNewMemberDbId(data.member.id);
-      setSuccess(true);
       setStep(3);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCardSaved = async (cardUid: string) => {
+    if (!newMemberDbId) return;
+
+    setCardError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/members/${newMemberDbId}/card-uid`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ cardUid }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal menyimpan UID kartu Kopdes");
+      }
+
+      setKopdesCardUid(cardUid);
+      setStep(4);
+    } catch (err) {
+      setCardError(err instanceof Error ? err.message : "Terjadi kesalahan");
+    }
+  };
+
+  const handleCardSkip = () => {
+    setCardError("");
+    setStep(4);
+  };
+
+  const handleFingerprintFinished = (demoCode?: string) => {
+    setFingerprintDemoCode(demoCode || "");
+    setSuccess(true);
+    setStep(5);
   };
 
   const handleReset = () => {
@@ -124,7 +165,10 @@ export default function PendaftaranPage() {
     setError("");
     setSuccess(false);
     setMemberId("");
-    setNewMemberDbId(null);
+      setNewMemberDbId(null);
+    setKopdesCardUid("");
+    setCardError("");
+    setFingerprintDemoCode("");
   };
 
   return (
@@ -137,59 +181,44 @@ export default function PendaftaranPage() {
         <p className="text-text-secondary mt-1">
           {step === 1 && "Langkah 1: Scan kartu RFID untuk membaca data KTP"}
           {step === 2 && "Langkah 2: Verifikasi data dan ambil foto"}
-          {step === 3 && "Pendaftaran berhasil!"}
+          {step === 3 && "Langkah 3: Tautkan UID kartu Kopdes"}
+          {step === 4 && "Langkah 4: Enrol sidik jari"}
+          {step === 5 && "Pendaftaran berhasil!"}
         </p>
       </div>
 
       {/* Progress Indicator */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-border">
         <div className="flex items-center justify-between mb-2">
-          <div
-            className={`flex items-center gap-2 ${step >= 1 ? "text-primary" : "text-text-secondary"}`}
-          >
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step >= 1 ? "bg-primary text-white" : "bg-surface"
-              }`}
-            >
-              1
+          {[
+            { n: 1, label: "Scan RFID" },
+            { n: 2, label: "Data & Foto" },
+            { n: 3, label: "Kartu Kopdes" },
+            { n: 4, label: "Sidik Jari" },
+            { n: 5, label: "Selesai" },
+          ].map((s, idx) => (
+            <div key={s.n} className="flex items-center flex-1 last:flex-none">
+              <div
+                className={`flex items-center gap-2 ${step >= s.n ? "text-primary" : "text-text-secondary"}`}
+              >
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                    step >= s.n ? "bg-primary text-white" : "bg-surface"
+                  }`}
+                >
+                  {s.n}
+                </div>
+                <span className="font-medium whitespace-nowrap">{s.label}</span>
+              </div>
+              {idx < 4 && (
+                <div className="flex-1 h-1 mx-4 bg-surface">
+                  <div
+                    className={`h-full transition-all ${step >= s.n + 1 ? "bg-primary w-full" : "w-0"}`}
+                  />
+                </div>
+              )}
             </div>
-            <span className="font-medium">Scan RFID</span>
-          </div>
-          <div className="flex-1 h-1 mx-4 bg-surface">
-            <div
-              className={`h-full transition-all ${step >= 2 ? "bg-primary w-full" : "w-0"}`}
-            />
-          </div>
-          <div
-            className={`flex items-center gap-2 ${step >= 2 ? "text-primary" : "text-text-secondary"}`}
-          >
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step >= 2 ? "bg-primary text-white" : "bg-surface"
-              }`}
-            >
-              2
-            </div>
-            <span className="font-medium">Data & Foto</span>
-          </div>
-          <div className="flex-1 h-1 mx-4 bg-surface">
-            <div
-              className={`h-full transition-all ${step >= 3 ? "bg-primary w-full" : "w-0"}`}
-            />
-          </div>
-          <div
-            className={`flex items-center gap-2 ${step >= 3 ? "text-primary" : "text-text-secondary"}`}
-          >
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step >= 3 ? "bg-primary text-white" : "bg-surface"
-              }`}
-            >
-              3
-            </div>
-            <span className="font-medium">Selesai</span>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -304,8 +333,29 @@ export default function PendaftaranPage() {
         </form>
       )}
 
-      {/* Step 3: Success */}
-      {step === 3 && success && (
+      {/* Step 3: Kartu Kopdes */}
+      {step === 3 && newMemberDbId && (
+        <div className="space-y-4">
+          {cardError && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-red-900">Error</p>
+                <p className="text-sm text-red-700">{cardError}</p>
+              </div>
+            </div>
+          )}
+          <KopdesCardScanner onSaved={handleCardSaved} onSkip={handleCardSkip} />
+        </div>
+      )}
+
+      {/* Step 4: Fingerprint */}
+      {step === 4 && newMemberDbId && (
+        <FingerprintEnrollment memberId={newMemberDbId} onComplete={handleFingerprintFinished} onSkip={handleFingerprintFinished} />
+      )}
+
+      {/* Step 5: Success */}
+      {step === 5 && success && (
         <div className="bg-white rounded-xl p-12 shadow-sm border border-border text-center">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-12 h-12 text-green-600" />
@@ -316,11 +366,22 @@ export default function PendaftaranPage() {
           <p className="text-text-secondary mb-6">
             Anggota baru telah berhasil didaftarkan ke dalam sistem koperasi.
           </p>
-          <div className="bg-surface rounded-lg p-6 mb-8 inline-block">
+          <div className="bg-surface rounded-lg p-6 mb-8 w-full max-w-xl mx-auto">
             <p className="text-sm text-text-secondary mb-1">Nomor Anggota</p>
             <p className="text-3xl font-bold font-mono text-primary">
               {memberId}
             </p>
+            {kopdesCardUid && (
+              <>
+                <p className="text-sm text-text-secondary mb-1 mt-4">
+                  UID Kartu Kopdes
+                </p>
+                <p className="text-lg font-semibold font-mono text-text-primary">
+                  {kopdesCardUid}
+                </p>
+              </>
+            )}
+            {newMemberDbId && <FingerprintDemoVerification memberId={newMemberDbId} issuedCode={fingerprintDemoCode} />}
           </div>
           <div className="flex flex-wrap gap-4 justify-center">
             {newMemberDbId && (

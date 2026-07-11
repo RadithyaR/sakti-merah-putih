@@ -3,9 +3,12 @@ import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
 
 export type JwtPayload = {
-  id: number
+  pengurusRef: string
   username: string
   role: string
+  koperasiRef: string
+  // Compatibility fields for legacy local KTP-only pages during the transition.
+  id: number
   koperasiId: number
 }
 
@@ -25,7 +28,7 @@ export async function comparePassword(password: string, hash: string): Promise<b
   return bcrypt.compare(password, hash)
 }
 
-export async function getKoperasiId(): Promise<number | null> {
+export async function getKoperasiId(): Promise<any> {
   const cookieStore = await cookies()
   const token = cookieStore.get('token')?.value
   
@@ -33,7 +36,7 @@ export async function getKoperasiId(): Promise<number | null> {
   
   try {
     const payload = verifyToken(token)
-    return payload.koperasiId
+    return payload.koperasiRef
   } catch {
     return null
   }

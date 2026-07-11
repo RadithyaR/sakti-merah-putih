@@ -243,7 +243,7 @@ async function main() {
       agama: 'Islam',
       statusPerkawinan: 'Kawin',
       pekerjaan: 'Wiraswasta',
-      rfidUid: '0013910654',
+      rfidUid: '4173892927',
     },
     {
       nik: '3201010200021988',
@@ -260,7 +260,7 @@ async function main() {
       agama: 'Islam',
       statusPerkawinan: 'Kawin',
       pekerjaan: 'Guru',
-      rfidUid: '0013624776',
+      rfidUid: '2976549637',
     },
     {
       nik: '3201010200031992',
@@ -277,7 +277,7 @@ async function main() {
       agama: 'Kristen',
       statusPerkawinan: 'Belum Kawin',
       pekerjaan: 'Programmer',
-      rfidUid: '4167398946',
+      rfidUid: '1671654914',
     },
     {
       nik: '3201010200041995',
@@ -294,7 +294,7 @@ async function main() {
       agama: 'Islam',
       statusPerkawinan: 'Belum Kawin',
       pekerjaan: 'Desainer Grafis',
-      rfidUid: '4167372726',
+      rfidUid: '2708062991',
     },
   ];
 

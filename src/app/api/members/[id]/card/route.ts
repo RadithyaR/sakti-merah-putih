@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
 import path from 'path'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
-import { prisma } from '@/lib/prisma'
+import { findMember } from '@/lib/cloud-db'
 import { getKoperasiId } from '@/lib/auth'
 import { formatNIK } from '@/lib/utils'
 
@@ -29,15 +29,8 @@ export async function GET(
     }
 
     const { id } = await params
-    const memberId = parseInt(id, 10)
-    if (isNaN(memberId)) {
-      return NextResponse.json({ error: 'ID tidak valid' }, { status: 400 })
-    }
-
-    const member = await prisma.member.findFirst({
-      where: { id: memberId, koperasiId },
-      include: { koperasi: true },
-    })
+    const cloudMember = await findMember(id, koperasiId)
+    const member = cloudMember ? { memberId: cloudMember.anggota_ref, nama: cloudMember.nama, nik: cloudMember.nik, koperasi: { nama: cloudMember.nama_koperasi || `Koperasi ${cloudMember.koperasi_ref}`, kode: cloudMember.nik_koperasi || cloudMember.koperasi_ref } } : null
     if (!member) {
       return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
     }

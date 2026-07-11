@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Trash2, Loader2 } from 'lucide-react'
 
 interface DeleteMemberButtonProps {
-  memberId: number
+  memberId: string
   memberName: string
   redirectAfter?: string
   variant?: 'button' | 'row'

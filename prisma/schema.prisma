@@ -50,6 +50,7 @@ model Member {
   tanggalDaftar     DateTime @default(now())
   status            String   @default("Aktif")
   koperasiId        Int
+  kopdesCardUid     String?  @unique
 
   ktpRecord         KtpRecord @relation(fields: [nik], references: [nik])
   koperasi          Koperasi  @relation(fields: [koperasiId], references: [id])
