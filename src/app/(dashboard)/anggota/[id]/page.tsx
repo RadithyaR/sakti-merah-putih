@@ -23,7 +23,7 @@ export default async function DetailAnggotaPage({ params }: PageProps) {
 
   const cloudMember = await findMember(id, koperasiId)
   const ktpRecord = cloudMember ? await prisma.ktpRecord.findUnique({ where: { nik: cloudMember.nik } }) : null
-  const member = cloudMember ? { id: cloudMember.anggota_ref, memberId: cloudMember.anggota_ref, nik: cloudMember.nik, nama: cloudMember.nama, foto: cloudMember.foto || '', phone: cloudMember.phone || '-', email: cloudMember.email, status: cloudMember.status_keanggotaan || 'Tidak Aktif', tanggalDaftar: cloudMember.tanggal_terdaftar || new Date(), ktpRecord } : null
+  const member = cloudMember ? { id: cloudMember.anggota_ref, memberId: cloudMember.anggota_ref, nik: cloudMember.nik, nama: cloudMember.nama, foto: cloudMember.foto || '', phone: cloudMember.phone || '-', email: cloudMember.email, status: cloudMember.status_keanggotaan || 'Tidak Aktif', tanggalDaftar: cloudMember.tanggal_terdaftar || new Date(), memberCardUid: cloudMember.member_card_uid, ktpRecord } : null
 
   if (!member) {
     notFound()
@@ -216,6 +216,10 @@ export default async function DetailAnggotaPage({ params }: PageProps) {
                 <p className="text-sm font-mono font-medium text-text-primary">
                   {member.ktpRecord?.rfidUid || '-'}
                 </p>
+              </div>
+              <div className="pt-4 border-t border-border">
+                <p className="text-xs text-text-secondary mb-1">UID Kartu Anggota</p>
+                <p className="text-sm font-mono font-medium text-text-primary">{member.memberCardUid || 'Belum ditautkan'}</p>
               </div>
 
             </div>

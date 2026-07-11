@@ -15,6 +15,7 @@ interface EditMemberFormProps {
     email: string | null
     status: string
     tanggalDaftar: string
+    memberCardUid: string | null
     ktpRecord: {
       tempatLahir: string
       tanggalLahir: string
@@ -45,6 +46,7 @@ export default function EditMemberForm({ member }: EditMemberFormProps) {
   const [status, setStatus] = useState(member.status)
   const [tanggalDaftar, setTanggalDaftar] = useState(toDateInput(member.tanggalDaftar))
   const [foto, setFoto] = useState(member.foto)
+  const [memberCardUid, setMemberCardUid] = useState(member.memberCardUid ?? '')
   const [showCamera, setShowCamera] = useState(false)
 
   // Data kependudukan (KTP)
@@ -85,6 +87,7 @@ export default function EditMemberForm({ member }: EditMemberFormProps) {
           status,
           foto,
           tanggalDaftar,
+          memberCardUid,
           tempatLahir,
           tanggalLahir,
           jenisKelamin,
@@ -223,6 +226,11 @@ export default function EditMemberForm({ member }: EditMemberFormProps) {
             <p className="text-xs text-text-secondary mt-1">
               Berpengaruh pada kewajiban dan hak simpanan anggota. Pastikan tanggal benar.
             </p>
+          </div>
+          <div>
+            <label className={labelClass}>UID Kartu Anggota</label>
+            <input type="text" inputMode="numeric" maxLength={10} value={memberCardUid} onChange={(e) => setMemberCardUid(e.target.value.replace(/\D/g, ''))} placeholder="10 digit, mis. 0013910654" className={`${inputClass} font-mono`} />
+            <p className="text-xs text-text-secondary mt-1">Opsional. UID ini berbeda dari UID RFID KTP.</p>
           </div>
 
         </div>

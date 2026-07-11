@@ -219,8 +219,9 @@ selalu diambil dari JWT pengurus, bukan dari browser.
 
 NIK riil 16 digit dibuat unik secara lintas koperasi melalui partial unique
 index. Data historis panitia yang NIK-nya sudah termask tetap tidak diubah.
-Tidak ada UID kartu anggota atau data biometrik pada model ini. RFID hanya
-dipakai untuk lookup KTP mock lokal.
+UID kartu anggota bersifat opsional, numerik 10 digit, dan unik secara global
+(contoh: `0013910654`). UID ini berbeda dari RFID KTP mock. Data biometrik
+belum disimpan pada model ini.
 
 Untuk development lokal, jalankan Cloud SQL Auth Proxy pada port `5434` dan
 atur `CLOUDSQL_DATABASE_URL` di `.env`; `DATABASE_URL` tetap dipakai Prisma

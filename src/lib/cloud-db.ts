@@ -40,6 +40,7 @@ export type CloudMember = {
   phone: string | null
   email: string | null
   foto: string | null
+  member_card_uid: string | null
 }
 
 export type MemberView = CloudMember & {
@@ -54,7 +55,7 @@ export async function listMembers(koperasiRef: string, search = '', status = '',
   if (status) { values.push(status); filters.push(`a.status_keanggotaan = $${values.length}`) }
   const where = filters.join(' and ')
   const [rows, count] = await Promise.all([
-    cloudQuery<MemberView>(`select a.anggota_ref,a.koperasi_ref,a.nama,a.nik,a.jenis_kelamin,a.status_keanggotaan,a.tanggal_terdaftar,a.pekerjaan,p.phone,p.email,p.foto,pr.nama_koperasi,pr.nik_koperasi from anggota_koperasi a left join app_member_profile p on p.anggota_ref=a.anggota_ref and p.koperasi_ref=a.koperasi_ref left join profil_koperasi pr on pr.koperasi_ref=a.koperasi_ref where ${where} order by a.tanggal_terdaftar desc nulls last limit $${values.length + 1} offset $${values.length + 2}`, [...values, limit, offset]),
+    cloudQuery<MemberView>(`select a.anggota_ref,a.koperasi_ref,a.nama,a.nik,a.jenis_kelamin,a.status_keanggotaan,a.tanggal_terdaftar,a.pekerjaan,p.phone,p.email,p.foto,p.member_card_uid,pr.nama_koperasi,pr.nik_koperasi from anggota_koperasi a left join app_member_profile p on p.anggota_ref=a.anggota_ref and p.koperasi_ref=a.koperasi_ref left join profil_koperasi pr on pr.koperasi_ref=a.koperasi_ref where ${where} order by a.tanggal_terdaftar desc nulls last limit $${values.length + 1} offset $${values.length + 2}`, [...values, limit, offset]),
     cloudQuery<{ total: string }>(`select count(*) as total from anggota_koperasi a where ${where}`, values),
   ])
   return { members: rows.rows, total: Number(count.rows[0].total) }
@@ -64,7 +65,7 @@ export async function findMember(anggotaRef: string, koperasiRef: string) {
   const result = await cloudQuery<MemberView>(`
     select a.anggota_ref, a.koperasi_ref, a.nama, a.nik, a.jenis_kelamin,
            a.status_keanggotaan, a.tanggal_terdaftar, a.pekerjaan,
-           p.phone, p.email, p.foto, pr.nama_koperasi, pr.nik_koperasi
+           p.phone, p.email, p.foto, p.member_card_uid, pr.nama_koperasi, pr.nik_koperasi
       from anggota_koperasi a
       left join app_member_profile p
         on p.anggota_ref = a.anggota_ref and p.koperasi_ref = a.koperasi_ref

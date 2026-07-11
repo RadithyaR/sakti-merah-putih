@@ -49,6 +49,7 @@ export default async function EditAnggotaPage({ params }: PageProps) {
     email: member.email,
     status: member.status,
     tanggalDaftar: member.tanggalDaftar.toISOString(),
+    memberCardUid: cloudMember.member_card_uid,
     ktpRecord: {
       ...member.ktpRecord,
       tanggalLahir: member.ktpRecord.tanggalLahir.toISOString(),

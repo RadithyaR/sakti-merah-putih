@@ -1,13 +1,15 @@
 -- Application-owned identity data for the hackathon Cloud SQL dataset.
 -- Existing organizer tables and anonymized historical rows remain unchanged.
 
-ALTER TABLE pengurus_koperasi
-  ADD CONSTRAINT pengurus_koperasi_ref_koperasi_key UNIQUE (pengurus_ref, koperasi_ref);
+DO $$ BEGIN
+  ALTER TABLE pengurus_koperasi ADD CONSTRAINT pengurus_koperasi_ref_koperasi_key UNIQUE (pengurus_ref, koperasi_ref);
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL; END $$;
 
-ALTER TABLE anggota_koperasi
-  ADD CONSTRAINT anggota_koperasi_ref_koperasi_key UNIQUE (anggota_ref, koperasi_ref);
+DO $$ BEGIN
+  ALTER TABLE anggota_koperasi ADD CONSTRAINT anggota_koperasi_ref_koperasi_key UNIQUE (anggota_ref, koperasi_ref);
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL; END $$;
 
-CREATE TABLE app_pengurus_login (
+CREATE TABLE IF NOT EXISTS app_pengurus_login (
   pengurus_ref text PRIMARY KEY,
   koperasi_ref text NOT NULL,
   username text NOT NULL UNIQUE,
@@ -21,7 +23,7 @@ CREATE TABLE app_pengurus_login (
     ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-CREATE TABLE app_member_profile (
+CREATE TABLE IF NOT EXISTS app_member_profile (
   anggota_ref text PRIMARY KEY,
   koperasi_ref text NOT NULL,
   phone text NOT NULL,
@@ -37,6 +39,6 @@ CREATE TABLE app_member_profile (
 
 -- Historical NIK values are masked and duplicated. This protects only real
 -- 16-digit NIK values created by the application, across every koperasi.
-CREATE UNIQUE INDEX anggota_koperasi_real_nik_unique
+CREATE UNIQUE INDEX IF NOT EXISTS anggota_koperasi_real_nik_unique
   ON anggota_koperasi (nik)
   WHERE nik ~ '^[0-9]{16}$';

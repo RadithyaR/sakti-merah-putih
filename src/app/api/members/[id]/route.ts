@@ -26,12 +26,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const existing = await findMember(id, user.koperasiRef)
     if (!existing) return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
     if (!body.nama || !body.phone || !body.status) return NextResponse.json({ error: 'Nama, telepon, dan status wajib diisi' }, { status: 400 })
+    const cardUid = body.memberCardUid ? String(body.memberCardUid).trim() : null
+    if (cardUid && !/^\d{10}$/.test(cardUid)) return NextResponse.json({ error: 'UID kartu anggota harus tepat 10 digit angka' }, { status: 400 })
     await withCloudTransaction(async (query) => {
       await query(`update anggota_koperasi set nama=$1,status_keanggotaan=$2,tanggal_terdaftar=coalesce($3::date,tanggal_terdaftar),pekerjaan=$4,diperbarui_pada=now() where anggota_ref=$5 and koperasi_ref=$6`, [body.nama, body.status, body.tanggalDaftar || null, body.pekerjaan || null, id, user.koperasiRef])
-      await query(`update app_member_profile set phone=$1,email=$2,foto=$3,diperbarui_pada=now() where anggota_ref=$4 and koperasi_ref=$5`, [body.phone, body.email || null, body.foto || existing.foto || '', id, user.koperasiRef])
+      await query(`update app_member_profile set phone=$1,email=$2,foto=$3,member_card_uid=$4,diperbarui_pada=now() where anggota_ref=$5 and koperasi_ref=$6`, [body.phone, body.email || null, body.foto || existing.foto || '', cardUid, id, user.koperasiRef])
     })
     return GET(request, { params: Promise.resolve({ id }) })
-  } catch { return NextResponse.json({ error: 'Terjadi kesalahan pada server' }, { status: 500 }) }
+  } catch (error: unknown) { return NextResponse.json({ error: (error as { code?: string }).code === '23505' ? 'UID kartu anggota sudah dipakai anggota lain' : 'Terjadi kesalahan pada server' }, { status: (error as { code?: string }).code === '23505' ? 409 : 500 }) }
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
