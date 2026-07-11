@@ -8,6 +8,7 @@ Sistem pendaftaran anggota koperasi berbasis web dengan integrasi RFID reader da
 - **Database Kependudukan** - Data KTP tersimpan di database PostgreSQL, terintegrasi dengan RFID UID
 - **Foto Digital** - Ambil foto anggota langsung dari webcam terintegrasi
 - **Kartu Kopdes** - Tautkan UID kartu anggota Kopdes fisik pasca-pendaftaran, dipakai untuk verifikasi anggota ke depannya (menggantikan scan KTP berulang)
+- **Simulasi Sidik Jari Cloud Run** - Enrol dan verifikasi alur sidik jari tanpa raw image atau template biometrik; menyimpan hanya status, jumlah tap, dan hash kode simulasi
 - **Multi-Tenant** - Setiap koperasi memiliki akun admin dan data anggota terpisah
 - **Dashboard** - Statistik dan ringkasan data anggota per koperasi
 - **Manajemen Anggota** - Daftar, cari, filter, lihat detail, **edit**, dan **hapus** data anggota
@@ -43,6 +44,8 @@ Browser
         |-- /api/members/*    - CRUD anggota (GET/PUT/DELETE per-anggota)
         |-- /api/members/[id]/card - Generate PDF kartu anggota (CR80)
         |-- /api/members/[id]/card-uid - Tautkan UID kartu Kopdes fisik
+        |-- /api/members/[id]/fingerprint/tap - Simulasi enrol satu tap (atau agent stasiun bila diaktifkan)
+        |-- /api/members/[id]/fingerprint/verify - Verifikasi kode simulasi tanpa data biometrik
         |-- /api/ktp/lookup   - Lookup KTP by RFID UID
         |-- /api/rfid/scan    - Simulasi scan RFID
         |
@@ -127,6 +130,9 @@ Edit file `.env`:
 ```env
 DATABASE_URL="postgresql://postgres:PASSWORD@localhost:5432/koperasi_db"
 JWT_SECRET="ganti-dengan-secret-key-anda"
+# Opsional. Gunakan `station` hanya di workstation yang menjalankan agent CS9711.
+FINGERPRINT_MODE="demo"
+FINGERPRINT_AGENT_URL="http://127.0.0.1:7373"
 ```
 
 ### 3. Setup Database
@@ -167,14 +173,19 @@ Setelah seed, tersedia 3 akun admin untuk 3 koperasi berbeda:
 
 ### 1. Pendaftaran Anggota Baru
 
-Alur pendaftaran terdiri dari 4 langkah:
+Alur pendaftaran terdiri dari 5 langkah:
 
 1. **Scan RFID** — Login sebagai admin koperasi, buka menu **Pendaftaran Anggota**, lalu tap kartu RFID KTP ke reader (atau klik **Simulasi** untuk demo). Data KTP otomatis tampil dari database kependudukan.
 2. **Data & Foto** — Ambil foto anggota via webcam, isi nomor telepon dan email (opsional), lalu klik **Daftarkan Anggota**. Nomor anggota otomatis digenerate (format: `KODE-YYYYMMDD-XXXX`).
-3. **Kartu Kopdes** — Tap kartu anggota Kopdes fisik (bukan KTP) ke reader untuk menautkan UID-nya ke anggota yang baru dibuat, atau klik **Lewati untuk Saat Ini** jika kartu fisik belum tersedia. Kartu ini yang dipakai untuk verifikasi anggota ke depannya — menggantikan scan KTP setelah pendaftaran awal.
-4. **Selesai** — Ringkasan nomor anggota (dan UID kartu Kopdes jika ditautkan), plus tombol cetak/unduh kartu.
+3. **Kartu Kopdes** — Masukkan atau tap UID kartu anggota Kopdes fisik (bukan KTP) dengan format tepat 10 digit, atau klik **Lewati untuk Saat Ini** jika kartu fisik belum tersedia. Kartu ini dipakai untuk verifikasi anggota ke depannya.
+4. **Sidik Jari** — Untuk Cloud Run, klik **Simulasikan Tap** empat kali. Sistem menyimpan status enrol, jumlah tap, dan hash kode simulasi saja; tidak ada citra, vektor, minutiae, atau template sidik jari. Setelah selesai, kode enam digit dapat dipakai untuk menguji verifikasi.
+5. **Selesai** — Ringkasan nomor anggota dan tombol cetak/unduh kartu.
 
 Kalau langkah 3 dilewati saat pendaftaran, UID kartu Kopdes bisa ditautkan belakangan lewat halaman **Edit Anggota** (field "UID Kartu Kopdes") — juga berguna untuk mengganti kartu yang hilang/rusak.
+
+### Mode Simulasi dan Stasiun Biometrik
+
+Mode default `demo` aman untuk Cloud Run dan tidak membutuhkan perangkat USB. Ia tidak boleh diperlakukan sebagai autentikasi biometrik nyata. Bila nanti ada stasiun CS9711, set `FINGERPRINT_MODE=station`; jalankan matcher dan agent dari proyek `SAKTI-MerahPutih` pada workstation tersebut. Browser tetap tidak mendapat akses USB, dan frame maupun template tidak dikirim ke Cloud SQL.
 
 ### 2. RFID Reader
 

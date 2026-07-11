@@ -7,6 +7,8 @@ import RfidScanner from "@/components/RfidScanner";
 import KtpCard from "@/components/KtpCard";
 import WebcamCapture from "@/components/WebcamCapture";
 import KopdesCardScanner from "@/components/KopdesCardScanner";
+import FingerprintEnrollment from "@/components/FingerprintEnrollment";
+import FingerprintDemoVerification from "@/components/FingerprintDemoVerification";
 
 interface KtpData {
   nik: string;
@@ -40,6 +42,7 @@ export default function PendaftaranPage() {
   const [newMemberDbId, setNewMemberDbId] = useState<string | null>(null);
   const [kopdesCardUid, setKopdesCardUid] = useState("");
   const [cardError, setCardError] = useState("");
+  const [fingerprintDemoCode, setFingerprintDemoCode] = useState("");
 
   const handleKtpFound = (ktp: KtpData) => {
     setKtpData(ktp);
@@ -136,7 +139,6 @@ export default function PendaftaranPage() {
       }
 
       setKopdesCardUid(cardUid);
-      setSuccess(true);
       setStep(4);
     } catch (err) {
       setCardError(err instanceof Error ? err.message : "Terjadi kesalahan");
@@ -145,8 +147,13 @@ export default function PendaftaranPage() {
 
   const handleCardSkip = () => {
     setCardError("");
-    setSuccess(true);
     setStep(4);
+  };
+
+  const handleFingerprintFinished = (demoCode?: string) => {
+    setFingerprintDemoCode(demoCode || "");
+    setSuccess(true);
+    setStep(5);
   };
 
   const handleReset = () => {
@@ -161,6 +168,7 @@ export default function PendaftaranPage() {
       setNewMemberDbId(null);
     setKopdesCardUid("");
     setCardError("");
+    setFingerprintDemoCode("");
   };
 
   return (
@@ -174,7 +182,8 @@ export default function PendaftaranPage() {
           {step === 1 && "Langkah 1: Scan kartu RFID untuk membaca data KTP"}
           {step === 2 && "Langkah 2: Verifikasi data dan ambil foto"}
           {step === 3 && "Langkah 3: Tautkan UID kartu Kopdes"}
-          {step === 4 && "Pendaftaran berhasil!"}
+          {step === 4 && "Langkah 4: Enrol sidik jari"}
+          {step === 5 && "Pendaftaran berhasil!"}
         </p>
       </div>
 
@@ -185,7 +194,8 @@ export default function PendaftaranPage() {
             { n: 1, label: "Scan RFID" },
             { n: 2, label: "Data & Foto" },
             { n: 3, label: "Kartu Kopdes" },
-            { n: 4, label: "Selesai" },
+            { n: 4, label: "Sidik Jari" },
+            { n: 5, label: "Selesai" },
           ].map((s, idx) => (
             <div key={s.n} className="flex items-center flex-1 last:flex-none">
               <div
@@ -200,7 +210,7 @@ export default function PendaftaranPage() {
                 </div>
                 <span className="font-medium whitespace-nowrap">{s.label}</span>
               </div>
-              {idx < 3 && (
+              {idx < 4 && (
                 <div className="flex-1 h-1 mx-4 bg-surface">
                   <div
                     className={`h-full transition-all ${step >= s.n + 1 ? "bg-primary w-full" : "w-0"}`}
@@ -339,8 +349,13 @@ export default function PendaftaranPage() {
         </div>
       )}
 
-      {/* Step 4: Success */}
-      {step === 4 && success && (
+      {/* Step 4: Fingerprint */}
+      {step === 4 && newMemberDbId && (
+        <FingerprintEnrollment memberId={newMemberDbId} onComplete={handleFingerprintFinished} onSkip={handleFingerprintFinished} />
+      )}
+
+      {/* Step 5: Success */}
+      {step === 5 && success && (
         <div className="bg-white rounded-xl p-12 shadow-sm border border-border text-center">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-12 h-12 text-green-600" />
@@ -351,7 +366,7 @@ export default function PendaftaranPage() {
           <p className="text-text-secondary mb-6">
             Anggota baru telah berhasil didaftarkan ke dalam sistem koperasi.
           </p>
-          <div className="bg-surface rounded-lg p-6 mb-8 inline-block">
+          <div className="bg-surface rounded-lg p-6 mb-8 w-full max-w-xl mx-auto">
             <p className="text-sm text-text-secondary mb-1">Nomor Anggota</p>
             <p className="text-3xl font-bold font-mono text-primary">
               {memberId}
@@ -366,6 +381,7 @@ export default function PendaftaranPage() {
                 </p>
               </>
             )}
+            {newMemberDbId && <FingerprintDemoVerification memberId={newMemberDbId} issuedCode={fingerprintDemoCode} />}
           </div>
           <div className="flex flex-wrap gap-4 justify-center">
             {newMemberDbId && (

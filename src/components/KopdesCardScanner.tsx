@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { CreditCard, Loader2, SkipForward } from 'lucide-react'
 
 interface KopdesCardScannerProps {
-  onSaved: (cardUid: string) => void
+  onSaved: (cardUid: string) => Promise<void>
   onSkip: () => void
 }
 
@@ -19,8 +19,9 @@ export default function KopdesCardScanner({ onSaved, onSkip }: KopdesCardScanner
   }, [])
 
   const handleSave = async () => {
-    if (!cardUid.trim()) {
-      setError('UID kartu tidak boleh kosong')
+    const uid = cardUid.trim()
+    if (!/^\d{10}$/.test(uid)) {
+      setError('UID kartu harus tepat 10 digit angka')
       return
     }
 
@@ -28,7 +29,7 @@ export default function KopdesCardScanner({ onSaved, onSkip }: KopdesCardScanner
     setError('')
 
     try {
-      onSaved(cardUid.trim())
+      await onSaved(uid)
     } finally {
       setLoading(false)
     }
@@ -68,15 +69,18 @@ export default function KopdesCardScanner({ onSaved, onSkip }: KopdesCardScanner
             ref={inputRef}
             id="cardUid"
             type="text"
+            inputMode="numeric"
+            maxLength={10}
             value={cardUid}
-            onChange={(e) => setCardUid(e.target.value)}
+            onChange={(e) => setCardUid(e.target.value.replace(/\D/g, ''))}
             onKeyDown={handleKeyDown}
             className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-mono"
-            placeholder="Contoh: KOPDES-0001-A1B2"
+            placeholder="Contoh: 0013910654"
             disabled={loading}
           />
           <p className="text-xs text-text-secondary mt-2">
-            💡 Input akan auto-focus. Tap kartu Kopdes atau ketik UID lalu tekan Enter.
+            Masukkan UID 10 digit. Input akan auto-focus; tap kartu Kopdes atau
+            ketik UID lalu tekan Enter.
             Ke depannya, kartu ini dipakai untuk verifikasi anggota — menggantikan
             scan KTP setelah pendaftaran awal.
           </p>
