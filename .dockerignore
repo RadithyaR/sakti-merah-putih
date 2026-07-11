@@ -1,0 +1,10 @@
+.env
+.env.*
+.git
+.gitignore
+.next
+node_modules
+graphify-out
+captures
+npm-debug.log*
+README.md

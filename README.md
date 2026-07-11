@@ -168,6 +168,17 @@ npm run dev
 
 Buka browser: **http://localhost:3000**
 
+### Container Produksi dan Cloud Run
+
+Uji image produksi secara lokal terlebih dahulu:
+
+```bash
+docker build -t sakti-merah-putih:local .
+docker run --rm -p 8080:8080 --env-file .env sakti-merah-putih:local
+```
+
+Untuk Cloud Run, gunakan satu service Next.js ini dan hubungkan ke Cloud SQL. `CLOUDSQL_DATABASE_URL` harus memakai Unix socket `/cloudsql/PROJECT:REGION:INSTANCE` dan disediakan melalui Secret Manager; jangan mengunggah `.env` lokal.
+
 ## 🔐 Akun Login
 
 Setelah seed, tersedia 3 akun admin untuk 3 koperasi berbeda:
